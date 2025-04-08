@@ -31,11 +31,12 @@ public class ProductService {
 
     public ProductResponse saveProduct(ProductRequest productRequest) throws JsonProcessingException {
         // Ambil categoryId berdasarkan kategori yang dipilih oleh pengguna
-        Category category = categoryRepository.findCategoryByType(productRequest.getProductCategory())
+        Category category = categoryRepository.findCategoryByCategory(productRequest.getProductCategory())
                 .orElseThrow(() -> new RuntimeException("Kategori tidak ditemukan"));
 
         Product product = Product.builder()
                 .productName(productRequest.getProductName())
+                .produkSpecific(productRequest.getProdukSpecific())
                 .productValue(productRequest.getProductValue())
                 .categoryId(category.getCategoryId())  // Menyimpan ID kategori langsung
                 .createdDate(new Date())
@@ -46,6 +47,7 @@ public class ProductService {
         ProductResponse response = ProductResponse.builder()
                 .productId(savedProduct.getProductId())
                 .productName(savedProduct.getProductName())
+                .produkSpecific(savedProduct.getProdukSpecific())
                 .productValue(savedProduct.getProductValue())
                 .categoryId(savedProduct.getCategoryId())  // Menampilkan ID kategori
                 .createdDate(savedProduct.getCreatedDate())
@@ -68,6 +70,7 @@ public class ProductService {
         ProductResponse productResponse = ProductResponse.builder()
                 .productId(product.get().getProductId())
                 .productName(product.get().getProductName())
+                .produkSpecific(product.get().getProdukSpecific())
                 .productValue(product.get().getProductValue())
                 .categoryId(product.get().getCategoryId())  // Menampilkan ID kategori
                 .createdDate(product.get().getCreatedDate())
@@ -85,12 +88,13 @@ public class ProductService {
                 .orElseThrow(() -> new RuntimeException("Produk tidak ditemukan"));
 
         // Ambil categoryId berdasarkan kategori yang dipilih oleh pengguna
-        Category category = categoryRepository.findCategoryByType(productRequest.getProductCategory())
+        Category category = categoryRepository.findCategoryByCategory(productRequest.getProductCategory())
                 .orElseThrow(() -> new RuntimeException("Kategori tidak ditemukan"));
 
         ProductResponse oldData = ProductResponse.builder()
                 .productId(existingProduct.getProductId())
                 .productName(existingProduct.getProductName())
+                .produkSpecific(existingProduct.getProdukSpecific())
                 .productValue(existingProduct.getProductValue())
                 .categoryId(existingProduct.getCategoryId())  // Menampilkan ID kategori lama
                 .createdDate(existingProduct.getCreatedDate())
@@ -98,6 +102,7 @@ public class ProductService {
 
         // Update produk
         existingProduct.setProductName(productRequest.getProductName());
+        existingProduct.setProdukSpecific(productRequest.getProdukSpecific());
         existingProduct.setProductValue(productRequest.getProductValue());
         existingProduct.setCategoryId(category.getCategoryId());  // Mengubah ke ID kategori baru
 
@@ -106,6 +111,7 @@ public class ProductService {
         ProductResponse response = ProductResponse.builder()
                 .productId(updatedProduct.getProductId())
                 .productName(updatedProduct.getProductName())
+                .produkSpecific(updatedProduct.getProdukSpecific())
                 .productValue(updatedProduct.getProductValue())
                 .categoryId(updatedProduct.getCategoryId())  // Menampilkan ID kategori baru
                 .createdDate(updatedProduct.getCreatedDate())
@@ -125,6 +131,7 @@ public class ProductService {
         ProductResponse oldData = ProductResponse.builder()
                 .productId(product.getProductId())
                 .productName(product.getProductName())
+                .produkSpecific(product.getProdukSpecific())
                 .productValue(product.getProductValue())
                 .categoryId(product.getCategoryId())  // Menampilkan ID kategori yang akan dihapus
                 .createdDate(product.getCreatedDate())

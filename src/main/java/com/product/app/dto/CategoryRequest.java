@@ -7,5 +7,5 @@ import lombok.Data;
 @Builder
 public class CategoryRequest {
 
-    private String type;
+    private String categoryType;
 }

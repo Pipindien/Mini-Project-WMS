@@ -6,5 +6,5 @@ import lombok.Data;
 @Data
 @Builder
 public class CategoryResponse {
-    private String type;
+    private String categoryType;
 }

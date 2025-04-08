@@ -23,12 +23,12 @@ public class CategoryService {
 
     public CategoryResponse saveCategory(CategoryRequest categoryRequest) throws JsonProcessingException {
         Category category = Category.builder()
-                .type(categoryRequest.getType())
+                .categoryType(categoryRequest.getCategoryType())
                 .build();
         Category savedCategory = categoryRepository.save(category);
 
         CategoryResponse response = CategoryResponse.builder()
-                .type(savedCategory.getType())
+                .categoryType(savedCategory.getCategoryType())
                 .build();
 
         auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACTIVITY_SAVE_CATEGORY,
@@ -38,11 +38,11 @@ public class CategoryService {
         return response;
     }
 
-    public CategoryResponse getCategoryByType(String type) throws JsonProcessingException {
+    public CategoryResponse getCategoryByCategory(String categoryType) throws JsonProcessingException {
 
-        Optional<Category> category = categoryRepository.findCategoryByType(type);
+        Optional<Category> category = categoryRepository.findCategoryByCategory(categoryType);
         CategoryResponse categoryResponse = CategoryResponse.builder()
-                .type(category.get().getType())
+                .categoryType(category.get().getCategoryType())
                 .build();
 
         auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_GET_CATEGORY_TYPE,
@@ -57,15 +57,15 @@ public class CategoryService {
                 .orElseThrow(() -> new RuntimeException("Kategori tidak ditemukan"));
 
         CategoryResponse oldData = CategoryResponse.builder()
-                .type(existingCategory.getType())
+                .categoryType(existingCategory.getCategoryType())
                 .build();
 
         // Update data kategori
-        existingCategory.setType(categoryRequest.getType());
+        existingCategory.setCategoryType(categoryRequest.getCategoryType());
         Category updatedCategory = categoryRepository.save(existingCategory);
 
         CategoryResponse response = CategoryResponse.builder()
-                .type(updatedCategory.getType())
+                .categoryType(updatedCategory.getCategoryType())
                 .build();
 
         auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_UPDATE_CATEGORY,
@@ -80,7 +80,7 @@ public class CategoryService {
                 .orElseThrow(() -> new RuntimeException("Kategori tidak ditemukan"));
 
         CategoryResponse oldData = CategoryResponse.builder()
-                .type(category.getType())
+                .categoryType(category.getCategoryType())
                 .build();
 
         categoryRepository.delete(category);
