@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Data
@@ -18,8 +19,11 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long productId;
     private String productName;
-    private String produkSpecific;
-    private Integer productValue;
+    private String productSpecific;
+    private Double productValue;
     private Long categoryId;
     private Date createdDate;
+
+    @OneToMany(mappedBy = "product")
+    private List<ProductValueHistory> productValueHistories;
 }

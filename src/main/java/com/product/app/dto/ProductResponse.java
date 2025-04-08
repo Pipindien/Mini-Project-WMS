@@ -9,9 +9,9 @@ import java.util.Date;
 @Builder
 public class ProductResponse {
     private Long productId;
-    private String produkSpecific;
+    private String productSpecific;
     private String productName;
-    private Integer productValue;
+    private Double productValue;
     private Long categoryId;
     private Date createdDate;
 }
