@@ -22,7 +22,7 @@ public class CategoryController {
 
     @GetMapping("/{categoryType}")
     public ResponseEntity<CategoryResponse> getCategoryType(@PathVariable String categoryType) throws JsonProcessingException {
-        return ResponseEntity.ok(categoryService.getCategoryByType(categoryType));
+        return ResponseEntity.ok(categoryService.getCategoryByCategory(categoryType));
     }
 
     @PutMapping("/update/{categoryId}")

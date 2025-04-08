@@ -40,7 +40,7 @@ public class CategoryService {
 
     public CategoryResponse getCategoryByCategory(String categoryType) throws JsonProcessingException {
 
-        Optional<Category> category = categoryRepository.findCategoryByCategory(categoryType);
+        Optional<Category> category = categoryRepository.findCategoryByCategoryType(categoryType);
         CategoryResponse categoryResponse = CategoryResponse.builder()
                 .categoryType(category.get().getCategoryType())
                 .build();

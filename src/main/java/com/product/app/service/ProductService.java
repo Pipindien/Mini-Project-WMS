@@ -31,7 +31,7 @@ public class ProductService {
 
     public ProductResponse saveProduct(ProductRequest productRequest) throws JsonProcessingException {
         // Ambil categoryId berdasarkan kategori yang dipilih oleh pengguna
-        Category category = categoryRepository.findCategoryByCategory(productRequest.getProductCategory())
+        Category category = categoryRepository.findCategoryByCategoryType(productRequest.getProductCategory())
                 .orElseThrow(() -> new RuntimeException("Kategori tidak ditemukan"));
 
         Product product = Product.builder()
@@ -88,7 +88,7 @@ public class ProductService {
                 .orElseThrow(() -> new RuntimeException("Produk tidak ditemukan"));
 
         // Ambil categoryId berdasarkan kategori yang dipilih oleh pengguna
-        Category category = categoryRepository.findCategoryByCategory(productRequest.getProductCategory())
+        Category category = categoryRepository.findCategoryByCategoryType(productRequest.getProductCategory())
                 .orElseThrow(() -> new RuntimeException("Kategori tidak ditemukan"));
 
         ProductResponse oldData = ProductResponse.builder()
