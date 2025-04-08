@@ -14,7 +14,7 @@ import java.util.Date;
 public class Token {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long tokenId;
 
     @Column(nullable = false, unique = true)
