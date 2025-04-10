@@ -9,7 +9,6 @@ import java.util.Date;
 @Builder
 public class ProductResponse {
     private Long productId;
-    private String productSpecific;
     private String productName;
     private Double productValue;
     private Long categoryId;

@@ -2,6 +2,7 @@ package com.product.app.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.product.app.advice.exception.CategoryNotFoundException;
 import com.product.app.constant.GeneralConstant;
 import com.product.app.dto.CategoryRequest;
 import com.product.app.dto.CategoryResponse;
@@ -39,7 +40,7 @@ public class CategoryService {
     }
 
     public CategoryResponse getCategoryByCategory(String categoryType) throws JsonProcessingException {
-
+        try {
         Optional<Category> category = categoryRepository.findCategoryByCategoryType(categoryType);
         CategoryResponse categoryResponse = CategoryResponse.builder()
                 .categoryType(category.get().getCategoryType())
@@ -50,17 +51,23 @@ public class CategoryService {
                 "Get Category Type Success");
 
         return categoryResponse;
+        } catch (CategoryNotFoundException ex) {
+            auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_GET_CATEGORY_TYPE,
+                    mapper.writeValueAsString(categoryType), mapper.writeValueAsString(ex.getMessage()),
+                    "Failed Get Category Type");
+            throw ex;
+        }
     }
 
     public CategoryResponse updateCategory(Long categoryId, CategoryRequest categoryRequest) throws JsonProcessingException {
+        try{
         Category existingCategory = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new RuntimeException("Kategori tidak ditemukan"));
+                .orElseThrow(() -> new CategoryNotFoundException("Category Not Found"));
 
         CategoryResponse oldData = CategoryResponse.builder()
                 .categoryType(existingCategory.getCategoryType())
                 .build();
 
-        // Update data kategori
         existingCategory.setCategoryType(categoryRequest.getCategoryType());
         Category updatedCategory = categoryRepository.save(existingCategory);
 
@@ -73,11 +80,18 @@ public class CategoryService {
                 "Update Category Success");
 
         return response;
+        } catch (CategoryNotFoundException ex) {
+            auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_UPDATE_CATEGORY,
+                    mapper.writeValueAsString(categoryRequest), mapper.writeValueAsString(ex.getMessage()),
+                    "Failed Update Category");
+            throw ex;
+        }
     }
 
     public String deleteCategory(Long categoryId) throws JsonProcessingException {
+        try{
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new RuntimeException("Kategori tidak ditemukan"));
+                .orElseThrow(() -> new CategoryNotFoundException("Category Not Found"));
 
         CategoryResponse oldData = CategoryResponse.builder()
                 .categoryType(category.getCategoryType())
@@ -89,8 +103,11 @@ public class CategoryService {
                 mapper.writeValueAsString(oldData), "", "Delete Category Success");
 
         return "Kategori berhasil dihapus.";
+        } catch (CategoryNotFoundException ex) {
+            auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_DELETE_CATEGORY,
+                    mapper.writeValueAsString(categoryId), mapper.writeValueAsString(ex.getMessage()),
+                    "Failed Delete Category");
+            throw ex;
+        }
     }
-
-
-
 }

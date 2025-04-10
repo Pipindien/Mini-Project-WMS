@@ -19,9 +19,9 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long productId;
     private String productName;
-    private String productSpecific;
     private Double productValue;
     private Long categoryId;
+    private Boolean isDeleted = false;
     private Date createdDate;
 
     @OneToMany(mappedBy = "product")

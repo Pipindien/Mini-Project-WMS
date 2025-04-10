@@ -9,7 +9,6 @@ import java.util.Date;
 @Builder
 public class ProductRequest {
     private String productName;
-    private String productSpecific;
     private Double productValue;
     private Long categoryId;
     private String productCategory;

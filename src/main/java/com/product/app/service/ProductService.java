@@ -2,6 +2,8 @@ package com.product.app.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.product.app.advice.exception.CategoryNotFoundException;
+import com.product.app.advice.exception.ProductNotFoundException;
 import com.product.app.constant.GeneralConstant;
 import com.product.app.dto.ProductRequest;
 import com.product.app.dto.ProductResponse;
@@ -12,7 +14,9 @@ import com.product.app.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -30,16 +34,18 @@ public class ProductService {
     private final ObjectMapper mapper = new ObjectMapper();
 
     public ProductResponse saveProduct(ProductRequest productRequest) throws JsonProcessingException {
-        // Ambil categoryId berdasarkan kategori yang dipilih oleh pengguna
+
+        try {
+
         Category category = categoryRepository.findCategoryByCategoryType(productRequest.getProductCategory())
-                .orElseThrow(() -> new RuntimeException("Kategori tidak ditemukan"));
+                .orElseThrow(() -> new CategoryNotFoundException("Category Not Found"));
 
         Product product = Product.builder()
                 .productName(productRequest.getProductName())
-                .productSpecific(productRequest.getProductSpecific())
                 .productValue(productRequest.getProductValue())
-                .categoryId(category.getCategoryId())  // Menyimpan ID kategori langsung
+                .categoryId(category.getCategoryId())
                 .createdDate(new Date())
+                .isDeleted(false)
                 .build();
 
         Product savedProduct = productRepository.save(product);
@@ -47,9 +53,8 @@ public class ProductService {
         ProductResponse response = ProductResponse.builder()
                 .productId(savedProduct.getProductId())
                 .productName(savedProduct.getProductName())
-                .productSpecific(savedProduct.getProductSpecific())
                 .productValue(savedProduct.getProductValue())
-                .categoryId(savedProduct.getCategoryId())  // Menampilkan ID kategori
+                .categoryId(savedProduct.getCategoryId())
                 .createdDate(savedProduct.getCreatedDate())
                 .build();
 
@@ -58,62 +63,107 @@ public class ProductService {
                 "Insert Product Save");
 
         return response;
+        } catch (CategoryNotFoundException ex) {
+            auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_SAVE,
+                    mapper.writeValueAsString(productRequest), mapper.writeValueAsString(ex.getMessage()),
+                    "Failed Save Product");
+            throw ex;
+        }
     }
 
     public ProductResponse getProductByProductName(String productName) throws JsonProcessingException {
-        Optional<Product> product = productRepository.findProductByProductName(productName);
+        try {
+            Optional<Product> product = productRepository.findProductByProductName(productName);
 
-        if (product.isEmpty()) {
-            throw new RuntimeException("Produk tidak ditemukan");
+            if (product.isEmpty()) {
+                throw new ProductNotFoundException("Product Not Found");
+            }
+
+            ProductResponse productResponse = ProductResponse.builder()
+                    .productId(product.get().getProductId())
+                    .productName(product.get().getProductName())
+                    .productValue(product.get().getProductValue())
+                    .categoryId(product.get().getCategoryId())
+                    .createdDate(product.get().getCreatedDate())
+                    .build();
+
+            auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_GET_PRODUCT_NAME,
+                    mapper.writeValueAsString(productName), mapper.writeValueAsString(productResponse),
+                    "Get Product Name Success");
+
+            return productResponse;
+        } catch (ProductNotFoundException ex) {
+            auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_GET_PRODUCT_NAME,
+                    mapper.writeValueAsString(productName), mapper.writeValueAsString(ex.getMessage()),
+                    "Failed Get Product Name");
+            throw ex;
         }
-
-        ProductResponse productResponse = ProductResponse.builder()
-                .productId(product.get().getProductId())
-                .productName(product.get().getProductName())
-                .productSpecific(product.get().getProductSpecific())
-                .productValue(product.get().getProductValue())
-                .categoryId(product.get().getCategoryId())  // Menampilkan ID kategori
-                .createdDate(product.get().getCreatedDate())
-                .build();
-
-        auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_GET_PRODUCT_NAME,
-                mapper.writeValueAsString(""), mapper.writeValueAsString(productResponse),
-                "Get Product Name Success");
-
-        return productResponse;
     }
 
-    public ProductResponse updateProduct(Long productId, ProductRequest productRequest) throws JsonProcessingException {
-        Product existingProduct = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Produk tidak ditemukan"));
+    public List<ProductResponse> getAllProducts() throws JsonProcessingException {
+        List<Product> products = productRepository.findAllActiveProducts();
 
-        // Ambil categoryId berdasarkan kategori yang dipilih oleh pengguna
+        if (products.isEmpty()) {
+            String message = "No Products Found";
+            auditTrailsService.logsAuditTrails(
+                    GeneralConstant.LOG_ACVITIY_GET_ALL_PRODUCT,
+                    mapper.writeValueAsString("Get All Products"),
+                    mapper.writeValueAsString(message),
+                    "Failed Get All Products"
+            );
+            throw new ProductNotFoundException(message);
+        }
+
+        List<ProductResponse> productResponses = new ArrayList<>();
+        for (Product product : products) {
+            ProductResponse response = ProductResponse.builder()
+                    .productId(product.getProductId())
+                    .productName(product.getProductName())
+                    .productValue(product.getProductValue())
+                    .categoryId(product.getCategoryId())
+                    .createdDate(product.getCreatedDate())
+                    .build();
+            productResponses.add(response);
+        }
+
+        auditTrailsService.logsAuditTrails(
+                GeneralConstant.LOG_ACVITIY_GET_ALL_PRODUCT,
+                mapper.writeValueAsString("Get All Products"),
+                mapper.writeValueAsString(productResponses),
+                "Get All Products Success"
+        );
+
+        return productResponses;
+    }
+
+
+    public ProductResponse updateProduct(Long productId, ProductRequest productRequest) throws JsonProcessingException {
+        try {
+        Product existingProduct = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException("Product Not Found"));
+
         Category category = categoryRepository.findCategoryByCategoryType(productRequest.getProductCategory())
-                .orElseThrow(() -> new RuntimeException("Kategori tidak ditemukan"));
+                .orElseThrow(() -> new CategoryNotFoundException("Category Not Found"));
 
         ProductResponse oldData = ProductResponse.builder()
                 .productId(existingProduct.getProductId())
                 .productName(existingProduct.getProductName())
-                .productSpecific(existingProduct.getProductSpecific())
                 .productValue(existingProduct.getProductValue())
-                .categoryId(existingProduct.getCategoryId())  // Menampilkan ID kategori lama
+                .categoryId(existingProduct.getCategoryId())
                 .createdDate(existingProduct.getCreatedDate())
                 .build();
 
-        // Update produk
         existingProduct.setProductName(productRequest.getProductName());
-        existingProduct.setProductSpecific(productRequest.getProductSpecific());
         existingProduct.setProductValue(productRequest.getProductValue());
-        existingProduct.setCategoryId(category.getCategoryId());  // Mengubah ke ID kategori baru
-
+        existingProduct.setCategoryId(category.getCategoryId());
+        existingProduct.setIsDeleted(false);
         Product updatedProduct = productRepository.save(existingProduct);
 
         ProductResponse response = ProductResponse.builder()
                 .productId(updatedProduct.getProductId())
                 .productName(updatedProduct.getProductName())
-                .productSpecific(updatedProduct.getProductSpecific())
                 .productValue(updatedProduct.getProductValue())
-                .categoryId(updatedProduct.getCategoryId())  // Menampilkan ID kategori baru
+                .categoryId(updatedProduct.getCategoryId())
                 .createdDate(updatedProduct.getCreatedDate())
                 .build();
 
@@ -122,26 +172,40 @@ public class ProductService {
                 "Update Product Success");
 
         return response;
+        } catch (ProductNotFoundException | CategoryNotFoundException ex) {
+            auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_UPDATE,
+                    mapper.writeValueAsString(productRequest), mapper.writeValueAsString(ex.getMessage()),
+                    "Failed Update Product");
+            throw ex;
+        }
     }
 
     public String deleteProduct(Long productId) throws JsonProcessingException {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Produk tidak ditemukan"));
+        try {
+            Product product = productRepository.findById(productId)
+                    .orElseThrow(() -> new ProductNotFoundException("Product Not Found"));
 
-        ProductResponse oldData = ProductResponse.builder()
-                .productId(product.getProductId())
-                .productName(product.getProductName())
-                .productSpecific(product.getProductSpecific())
-                .productValue(product.getProductValue())
-                .categoryId(product.getCategoryId())  // Menampilkan ID kategori yang akan dihapus
-                .createdDate(product.getCreatedDate())
-                .build();
+            ProductResponse oldData = ProductResponse.builder()
+                    .productId(product.getProductId())
+                    .productName(product.getProductName())
+                    .productValue(product.getProductValue())
+                    .categoryId(product.getCategoryId())
+                    .createdDate(product.getCreatedDate())
+                    .build();
 
-        productRepository.delete(product);
+            product.setIsDeleted(true);
+            productRepository.save(product);
 
-        auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_DELETE,
-                mapper.writeValueAsString(oldData), "", "Delete Product Success");
+            auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_DELETE,
+                    mapper.writeValueAsString(oldData), "", "Soft Delete Product Success");
 
-        return "Produk berhasil dihapus.";
+            return "Produk berhasil dihapus (soft delete).";
+        } catch (ProductNotFoundException ex) {
+            auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_DELETE,
+                    mapper.writeValueAsString(productId), mapper.writeValueAsString(ex.getMessage()),
+                    "Failed Delete Product");
+            throw ex;
+        }
     }
+
 }
