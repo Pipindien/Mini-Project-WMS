@@ -28,9 +28,9 @@ public class AuthController {
     }
 
     @GetMapping("/")
-    public String getUser(@RequestHeader String token) throws JsonProcessingException {
-        loginService.checkToken(token);
-        return "Token valid";
+    public ResponseEntity<LoginResponse> getUser(@RequestHeader String token) throws JsonProcessingException {
+        LoginResponse loginResponse = loginService.checkToken(token);
+        return ResponseEntity.ok(loginResponse);
     }
 
     @PutMapping("/profile")

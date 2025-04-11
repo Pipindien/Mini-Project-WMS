@@ -145,7 +145,6 @@ public class LoginServiceImplementation implements LoginService {
 
             return LoginResponse.builder()
                     .token(token)
-                    .custId(user.getCustId())
                     .build();
 
         } catch (Exception ex) {
