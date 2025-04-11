@@ -12,4 +12,6 @@ spring:
 audit-trails:
   url: http://localhost:8080/audit-trails/save
 auth-validate-token:
-  url: http://localhost:8080/auth
+  url: http://localhost:8080/auth/
+product-service:
+  url: http://localhost:8082/product/category/{categoryId}

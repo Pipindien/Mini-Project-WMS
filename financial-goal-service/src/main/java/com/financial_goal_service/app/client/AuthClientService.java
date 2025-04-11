@@ -19,17 +19,22 @@ public class AuthClientService {
     @Value("${auth-validate-token.url}")
     private String authUrl;
 
-    public Long getIdCustFromToken(String token) {
+    public UsersResponse getUserProfileFromToken(String token) {
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set("token", token);
+        httpHeaders.set("token", token); // pastikan header key-nya sesuai dengan backend Auth
         HttpEntity<String> httpEntity = new HttpEntity<>(httpHeaders);
+
         ResponseEntity<UsersResponse> responseEntity = restTemplate.exchange(
                 authUrl,
                 HttpMethod.GET,
                 httpEntity,
-                UsersResponse.class);
-        return responseEntity.getBody().getCustId();
+                UsersResponse.class
+        );
+
+        return responseEntity.getBody();
     }
+
+
 
 
 }

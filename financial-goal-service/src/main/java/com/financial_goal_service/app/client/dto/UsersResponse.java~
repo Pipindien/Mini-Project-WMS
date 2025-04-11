@@ -6,7 +6,5 @@ import lombok.Data;
 public class UsersResponse {
     private Long custId;
     private String token;
-    private Integer age;
-    private Double salary;
 
 }

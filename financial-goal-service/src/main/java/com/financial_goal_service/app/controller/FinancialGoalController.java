@@ -3,6 +3,7 @@ package com.financial_goal_service.app.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.financial_goal_service.app.dto.FinancialGoalRequest;
 import com.financial_goal_service.app.dto.FinancialGoalResponse;
+import com.financial_goal_service.app.dto.SuggestedPortfolioResponse;
 import com.financial_goal_service.app.service.FinancialGoalService;
 import com.financial_goal_service.app.utility.RestApiPath;
 import jakarta.validation.Valid;
@@ -30,8 +31,8 @@ public class FinancialGoalController {
     }
 
     @PutMapping(RestApiPath.FINANCIALGOAL_UPDATE)
-    public ResponseEntity<FinancialGoalResponse> updateFinancialGoal (@PathVariable Long goalId, @Valid @RequestBody  FinancialGoalRequest financialGoalRequest) throws JsonProcessingException {
-        FinancialGoalResponse response = financialGoalService.updateFinancialGoal(goalId, financialGoalRequest);
+    public ResponseEntity<FinancialGoalResponse> updateFinancialGoal (@PathVariable Long goalId, @RequestHeader String token, @Valid @RequestBody  FinancialGoalRequest financialGoalRequest) throws JsonProcessingException {
+        FinancialGoalResponse response = financialGoalService.updateFinancialGoal(goalId, token, financialGoalRequest);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
@@ -60,11 +61,19 @@ public class FinancialGoalController {
     }
 
 
+    @GetMapping("/{goalId}/suggested-portfolio")
+    public ResponseEntity<SuggestedPortfolioResponse> getSuggestedPortfolio(@PathVariable Long goalId) {
+        SuggestedPortfolioResponse response = financialGoalService.getSuggestedPortfolio(goalId);
+        return ResponseEntity.ok(response);
+    }
 
-
-
-
-
-
+    @GetMapping("/get/{goalName}")
+    public ResponseEntity<FinancialGoalResponse> getGoalByName(
+            @PathVariable String goalName,
+            @RequestHeader String token
+    ) throws JsonProcessingException {
+        FinancialGoalResponse goal = financialGoalService.getGoalByName(goalName, token);
+        return ResponseEntity.ok(goal);
+    }
 
 }

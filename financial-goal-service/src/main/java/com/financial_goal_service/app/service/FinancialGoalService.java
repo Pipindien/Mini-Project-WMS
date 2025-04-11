@@ -19,6 +19,9 @@ public interface FinancialGoalService {
 
     SuggestedPortfolioResponse getSuggestedPortfolio(Long goalId);
 
-    FinancialGoalResponse updateFinancialGoal(Long goalId, FinancialGoalRequest financialGoalRequest) throws JsonProcessingException;
+    FinancialGoalResponse updateFinancialGoal(Long goalId, String token, FinancialGoalRequest financialGoalRequest) throws JsonProcessingException;
+
+    FinancialGoalResponse getGoalByName(String goalName, String token) throws JsonProcessingException;
+
 }
 
