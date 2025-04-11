@@ -19,4 +19,10 @@ public interface TransactionService {
     Transaction getTrxNumber(String trxNumber);
 
     Transaction getTransactionNumber(String trxNumber) throws JsonProcessingException;
+
+    List<TransactionResponse> getTransactionsByCustId(String token);
+
+    List<TransactionResponse> getTransactionsByGoalName(String token, String goalName);
+
+
 }

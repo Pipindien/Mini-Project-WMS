@@ -22,6 +22,7 @@ import com.transaction.app.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -252,4 +253,62 @@ public class TransactionServiceImplementation implements TransactionService {
 
         return transaction;
     }
+
+    public List<TransactionResponse> getTransactionsByCustId(String token) {
+        Long custId = usersClient.getIdCustFromToken(token);
+        List<Transaction> transactions = transactionRepository.findByCustId(custId);
+
+        List<TransactionResponse> responses = new ArrayList<>();
+
+        for (Transaction trx : transactions) {
+            TransactionResponse response = TransactionResponse.builder()
+                    .status(trx.getStatus())
+                    .amount(trx.getAmount())
+                    .custId(trx.getCustId())
+                    .productId(trx.getProductId())
+                    .productPrice(trx.getProductPrice())
+                    .lot(trx.getLot())
+                    .goalId(trx.getGoalId())
+                    .build();
+
+            responses.add(response);
+        }
+
+        return responses;
+    }
+
+    @Override
+    public List<TransactionResponse> getTransactionsByGoalName(String token, String goalName) {
+        Long custId = usersClient.getIdCustFromToken(token);
+
+        FinancialGoalResponse goalRequest = new FinancialGoalResponse();
+        goalRequest.setGoalName(goalName);
+
+        FinancialGoalResponse goalResponse = fingolClient.getFinansialGoalByName(goalRequest, token);
+        if (goalResponse == null) {
+            throw new IllegalArgumentException("Goal tidak ditemukan: " + goalName);
+        }
+
+        Long goalId = goalResponse.getGoalId();
+        List<Transaction> transactions = transactionRepository.findByCustIdAndGoalId(custId, goalId);
+
+        List<TransactionResponse> responses = new ArrayList<>();
+        for (Transaction trx : transactions) {
+            TransactionResponse response = TransactionResponse.builder()
+                    .status(trx.getStatus())
+                    .amount(trx.getAmount())
+                    .custId(trx.getCustId())
+                    .productId(trx.getProductId())
+                    .productPrice(trx.getProductPrice())
+                    .lot(trx.getLot())
+                    .goalId(trx.getGoalId())
+                    .build();
+            responses.add(response);
+        }
+
+        return responses;
+    }
+
+
+
 }

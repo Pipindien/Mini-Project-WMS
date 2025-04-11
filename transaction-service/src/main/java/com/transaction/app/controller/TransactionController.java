@@ -47,4 +47,20 @@ public class TransactionController {
             @RequestParam("status") String status) {
         return ResponseEntity.ok(transactionService.getTransactionStatus(status));
     }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<TransactionResponse>> getMyTransactions(@RequestHeader String token) {
+        List<TransactionResponse> response = transactionService.getTransactionsByCustId(token);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/my/{goalName}")
+    public ResponseEntity<List<TransactionResponse>> getMyTransactionsByGoalName(
+            @RequestHeader String token,
+            @PathVariable String goalName) {
+        List<TransactionResponse> response = transactionService.getTransactionsByGoalName(token, goalName);
+        return ResponseEntity.ok(response);
+    }
+
+
 }
