@@ -13,5 +13,7 @@ public class LoginRequest {
     private String email;
     private String password;
     private String phone;
+    private Integer age;
+    private Double salary;
     private String token;
 }

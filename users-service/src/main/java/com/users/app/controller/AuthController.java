@@ -37,7 +37,7 @@ public class AuthController {
     public ResponseEntity<Users> updateProfile(
             @RequestHeader("Authorization") String token,
             @RequestBody Users updatedProfile) throws JsonProcessingException {
-        
+
         String jwtToken = token.replace("Bearer ", "");
 
         Users updated = loginService.updateProfile(jwtToken, updatedProfile);

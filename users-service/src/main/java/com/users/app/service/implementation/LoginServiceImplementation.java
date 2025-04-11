@@ -2,10 +2,7 @@ package com.users.app.service.implementation;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.users.app.advice.exception.EmailAlreadyRegisteredException;
-import com.users.app.advice.exception.PasswordInvalidException;
-import com.users.app.advice.exception.PhoneAlreadyRegisteredException;
-import com.users.app.advice.exception.UsernameNotFoundException;
+import com.users.app.advice.exception.*;
 import com.users.app.constant.GeneralConstant;
 import com.users.app.dto.AuditTrailsRequest;
 import com.users.app.dto.LoginRequest;
@@ -52,6 +49,8 @@ public class LoginServiceImplementation implements LoginService {
                     .fullName(loginRequest.getFullName())
                     .email(loginRequest.getEmail())
                     .phone(loginRequest.getPhone())
+                    .age(loginRequest.getAge())
+                    .salary(loginRequest.getSalary())
                     .username(loginRequest.getUsername())
                     .password(passwordEncoder.encode(loginRequest.getPassword()))
                     .role("USER")
@@ -157,7 +156,7 @@ public class LoginServiceImplementation implements LoginService {
                     .response(ex.getMessage())
                     .build());
 
-            throw new RuntimeException("Token Invalid or Expired.");
+            throw new TokenExpiredException("Token Invalid or Expired.");
         }
     }
 
@@ -171,6 +170,8 @@ public class LoginServiceImplementation implements LoginService {
             existingUser.setFullName(updatedProfile.getFullName());
             existingUser.setEmail(updatedProfile.getEmail());
             existingUser.setPhone(updatedProfile.getPhone());
+            existingUser.setAge(updatedProfile.getAge());
+            existingUser.setSalary(updatedProfile.getSalary());
 
             Users savedUser = usersRepository.save(existingUser);
 

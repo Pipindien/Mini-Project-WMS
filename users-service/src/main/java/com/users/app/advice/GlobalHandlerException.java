@@ -1,10 +1,7 @@
 package com.users.app.advice;
 
 import com.users.app.advice.dto.ErrorResponse;
-import com.users.app.advice.exception.EmailAlreadyRegisteredException;
-import com.users.app.advice.exception.PasswordInvalidException;
-import com.users.app.advice.exception.PhoneAlreadyRegisteredException;
-import com.users.app.advice.exception.UsernameNotFoundException;
+import com.users.app.advice.exception.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -47,6 +44,11 @@ public class GlobalHandlerException {
     @ExceptionHandler(PasswordInvalidException.class)
     public ResponseEntity<ErrorResponse> handlePasswordInvalidException(PasswordInvalidException ex) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Password Invalid", ex.getMessage());
+    }
+
+    @ExceptionHandler(TokenExpiredException.class)
+    public ResponseEntity<ErrorResponse> handleTokenExpiredException(TokenExpiredException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Token Expired", ex.getMessage());
     }
 
     @ExceptionHandler(RuntimeException.class)
