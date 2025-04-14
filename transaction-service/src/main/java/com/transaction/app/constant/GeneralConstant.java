@@ -10,4 +10,6 @@ public class GeneralConstant {
     public static final String LOG_ACVITIY_GOPAY_TRANSACTION = "Call API Gopay";
     public static final String LOG_ACVITIY_GOPAY_STATUS = "Call API Gopay Status";
 
+    public static final String LOG_ACVITIY_SELL = "Sell Transaction";
+
 }

@@ -14,15 +14,19 @@ public interface TransactionService {
 
     TransactionResponse updateTransaction(TransactionRequest request, String trxNumber, String token) throws JsonProcessingException;
 
+    TransactionResponse updateTransactionStatusOnly(String trxNumber, String status, String token) throws JsonProcessingException;
+
+    List<TransactionResponse> sellByProductName(String productName, int lotToSell, String token) throws JsonProcessingException;
+
     List<TransactionList> getTransactionStatus(String status);
 
     Transaction getTrxNumber(String trxNumber);
 
     Transaction getTransactionNumber(String trxNumber) throws JsonProcessingException;
 
-    List<TransactionResponse> getTransactionsByCustId(String token);
+    List<TransactionResponse> getTransactionsByCustId(String token) throws JsonProcessingException;
 
-    List<TransactionResponse> getTransactionsByGoalName(String token, String goalName);
+    List<TransactionResponse> getTransactionsByGoalName(String token, String goalName) throws JsonProcessingException;
 
 
 }

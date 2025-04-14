@@ -9,6 +9,7 @@ public class ProductRequest {
     private Long productId;
     private String productName;
     private Double productPrice;
+    private Double productRate;
     private String productCategory;
     private Date createdDate;
 }
