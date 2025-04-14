@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/db_product_wms
+    url: jdbc:postgresql://localhost:5432/db_product
     username: postgres
-    password: 12345
+    password: admin
   jpa:
     hibernate:
       ddl-auto: update

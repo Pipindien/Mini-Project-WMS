@@ -41,6 +41,23 @@ public class ProductController {
         }
     }
 
+    @GetMapping("/get/{productId}")
+    public ResponseEntity<ProductResponse> getProductById(@PathVariable Long productId) throws JsonProcessingException {
+        return ResponseEntity.ok(productService.getProductById(productId));
+    }
+
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<List<ProductResponse>> getProductsByCategoryId(@PathVariable Long categoryId) {
+        try {
+            List<ProductResponse> products = productService.getProductsByCategoryId(categoryId);
+            return ResponseEntity.ok(products);
+        } catch (ProductNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } catch (JsonProcessingException ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
     @PutMapping("/update/{productId}")
     public ResponseEntity<ProductResponse> updateProduct(@PathVariable Long productId,
                                                          @RequestBody ProductRequest productRequest) throws JsonProcessingException {
