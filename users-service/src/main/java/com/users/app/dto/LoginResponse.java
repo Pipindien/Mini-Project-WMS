@@ -10,4 +10,6 @@ import java.util.UUID;
 public class LoginResponse {
     private String token;
     private Long custId;
+    private Integer age;
+    private Double salary;
 }

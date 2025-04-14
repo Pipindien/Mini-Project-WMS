@@ -1,10 +1,6 @@
 package com.users.app.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import lombok.Data;
 
@@ -21,7 +17,9 @@ public class AuditTrails {
     private String action;
     private String description;
     private Date date;
+    @Column(columnDefinition = "TEXT")
     private String request;
+    @Column(columnDefinition = "TEXT")
     private String response;
 
 }

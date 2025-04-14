@@ -5,6 +5,7 @@ import com.users.app.dto.LoginRequest;
 import com.users.app.dto.LoginResponse;
 import com.users.app.entity.Users;
 import com.users.app.service.LoginService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<LoginResponse> register(@RequestBody LoginRequest loginRequest) throws JsonProcessingException {
+    public ResponseEntity<LoginResponse> register(@Valid @RequestBody LoginRequest loginRequest) throws JsonProcessingException {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(loginService.registerasi(loginRequest));
     }
@@ -36,7 +37,7 @@ public class AuthController {
     @PutMapping("/profile")
     public ResponseEntity<Users> updateProfile(
             @RequestHeader("Authorization") String token,
-            @RequestBody Users updatedProfile) throws JsonProcessingException {
+          @Valid @RequestBody Users updatedProfile) throws JsonProcessingException {
 
         String jwtToken = token.replace("Bearer ", "");
 
