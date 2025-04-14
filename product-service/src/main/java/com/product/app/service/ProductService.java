@@ -44,6 +44,7 @@ public class ProductService {
                 .productRate(productRequest.getProductRate())
                 .categoryId(category.getCategoryId())
                 .createdDate(new Date())
+                .productCategory(category.getCategoryType())
                 .isDeleted(false)
                 .build();
         Product savedProduct = productRepository.save(product);
@@ -55,6 +56,7 @@ public class ProductService {
                 .productRate(savedProduct.getProductRate())
                 .categoryId(savedProduct.getCategoryId())
                 .createdDate(savedProduct.getCreatedDate())
+                .productCategory(savedProduct.getProductCategory())
                 .build();
 
         auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_SAVE,
@@ -85,6 +87,7 @@ public class ProductService {
                     .productRate(product.get().getProductRate())
                     .categoryId(product.get().getCategoryId())
                     .createdDate(product.get().getCreatedDate())
+                    .productCategory(product.get().getProductCategory())
                     .build();
 
             auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_GET_PRODUCT_NAME,
@@ -123,6 +126,7 @@ public class ProductService {
                     .productRate(product.getProductRate())
                     .categoryId(product.getCategoryId())
                     .createdDate(product.getCreatedDate())
+                    .productCategory(product.getProductCategory())
                     .build();
             productResponses.add(response);
         }
@@ -153,6 +157,7 @@ public class ProductService {
                 .productRate(existingProduct.getProductRate())
                 .categoryId(existingProduct.getCategoryId())
                 .createdDate(existingProduct.getCreatedDate())
+                .productCategory(existingProduct.getProductCategory())
                 .build();
 
         existingProduct.setProductName(productRequest.getProductName());
@@ -169,6 +174,7 @@ public class ProductService {
                 .productRate(updatedProduct.getProductRate())
                 .categoryId(updatedProduct.getCategoryId())
                 .createdDate(updatedProduct.getCreatedDate())
+                .productCategory(updatedProduct.getProductCategory())
                 .build();
 
         auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_UPDATE,
@@ -196,6 +202,7 @@ public class ProductService {
                     .productRate(product.getProductRate())
                     .categoryId(product.getCategoryId())
                     .createdDate(product.getCreatedDate())
+                    .productCategory(product.getProductCategory())
                     .build();
 
             product.setIsDeleted(true);
@@ -235,6 +242,7 @@ public class ProductService {
                         .productRate(product.getProductRate())
                         .categoryId(product.getCategoryId())
                         .createdDate(product.getCreatedDate())
+                        .productCategory(product.getProductCategory())
                         .build();
                 productResponses.add(response);
             }
@@ -261,6 +269,7 @@ public class ProductService {
                     .productRate(product.getProductRate())
                     .categoryId(product.getCategoryId())
                     .createdDate(product.getCreatedDate())
+                    .productCategory(product.getProductCategory())
                     .build();
 
             auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_GET_PRODUCT_ID,
