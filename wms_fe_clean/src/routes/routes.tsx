@@ -4,9 +4,9 @@ import HomeAdmin from "../pages/admin/homeAdmin";
 import ProductForm from "../pages/admin/productForm";
 import ProductDetail from "../pages/detail/productDetail";
 import Home from "../pages/home/home";
-import Login from "../pages/auth/login";
+import Login from "../pages/auth/loginPage";
 import ProtectedRoute from "./protectedRoute";
-import RegisterPage from "../pages/auth/register";
+import RegisterPage from "../pages/auth/registerPage";
 
 export const router = createBrowserRouter([
   {
