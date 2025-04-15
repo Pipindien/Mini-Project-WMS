@@ -20,7 +20,6 @@ const ProductDetail: React.FC = () => {
       <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-md overflow-hidden md:flex">
         <img
           className="h-64 w-full object-cover md:w-1/3"
-          //   src={product.imageUrl}
           alt={product.productName}
         />
         <div className="p-8 md:w-2/3">

@@ -8,7 +8,7 @@ const Login: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -16,23 +16,29 @@ const Login: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setErrorMessage("");
 
     try {
       const response = await loginRequest({ username, password });
 
-      // Pisahkan user data dan token
       const { token, ...userData } = response;
 
-      // Panggil login dari context
       login({
         token,
         user: userData as UserData,
       });
 
-      navigate("/dashboard");
+      const role = (userData as UserData).role;
+      if (role === "ADMIN") {
+        navigate("/dashboardAdmin");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err: any) {
-      setError(err.response?.data?.message || "Login gagal");
+      const message =
+        err?.response?.data?.message ||
+        "Login gagal. Periksa username/password Anda.";
+      setErrorMessage(message);
     } finally {
       setLoading(false);
     }
@@ -87,8 +93,8 @@ const Login: React.FC = () => {
               />
             </div>
 
-            {error && (
-              <p className="text-red-500 text-sm text-center">{error}</p>
+            {errorMessage && (
+              <p className="text-red-500 text-sm text-center">{errorMessage}</p>
             )}
 
             <button

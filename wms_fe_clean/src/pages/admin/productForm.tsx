@@ -30,12 +30,10 @@ const ProductForm: React.FC = () => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Load category list
     getAllCategory()
       .then(setCategories)
       .catch(() => setError("Failed to load categories"));
 
-    // Load product if in edit mode
     if (isEdit && id) {
       setLoading(true);
       getProductById(id)

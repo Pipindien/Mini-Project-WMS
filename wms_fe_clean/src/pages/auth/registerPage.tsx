@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { register, RegisterPayload } from "../../services/api/register";
+import { register } from "../../services/api/register";
+import { RegisterPayload } from "../../services/auth/type";
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();

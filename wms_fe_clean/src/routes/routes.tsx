@@ -1,12 +1,12 @@
 import { createBrowserRouter } from "react-router-dom";
+import Login from "../pages/auth/loginPage";
+import RegisterPage from "../pages/auth/registerPage";
 import Layout from "../layout";
-import HomeAdmin from "../pages/admin/homeAdmin";
-import ProductForm from "../pages/admin/productForm";
+import ProtectedRoute from "./protectedRoute";
 import ProductDetail from "../pages/detail/productDetail";
 import Home from "../pages/home/home";
-import Login from "../pages/auth/loginPage";
-import ProtectedRoute from "./protectedRoute";
-import RegisterPage from "../pages/auth/registerPage";
+import HomeAdmin from "../pages/admin/homeAdmin";
+import ProductForm from "../pages/admin/productForm";
 
 export const router = createBrowserRouter([
   {
@@ -18,12 +18,20 @@ export const router = createBrowserRouter([
     element: <RegisterPage />,
   },
   {
+    path: "/unauthorized",
+    element: (
+      <div className="text-center text-red-600 mt-20 text-xl">
+        Access Denied - Unauthorized
+      </div>
+    ),
+  },
+  {
     element: <Layout />,
     children: [
       {
         path: "/dashboard",
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["user"]}>
             <Home />
           </ProtectedRoute>
         ),
@@ -31,18 +39,18 @@ export const router = createBrowserRouter([
       {
         path: "/product/:id",
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["user"]}>
             <ProductDetail />
           </ProtectedRoute>
         ),
       },
       {
-        path: "/admin",
+        path: "/dashboardAdmin",
         children: [
           {
             path: "",
             element: (
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={["admin"]}>
                 <HomeAdmin />
               </ProtectedRoute>
             ),
@@ -50,7 +58,7 @@ export const router = createBrowserRouter([
           {
             path: "create",
             element: (
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={["admin"]}>
                 <ProductForm />
               </ProtectedRoute>
             ),
@@ -58,7 +66,7 @@ export const router = createBrowserRouter([
           {
             path: "edit/:id",
             element: (
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={["admin"]}>
                 <ProductForm />
               </ProtectedRoute>
             ),

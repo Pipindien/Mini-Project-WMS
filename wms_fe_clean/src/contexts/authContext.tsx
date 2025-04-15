@@ -22,15 +22,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const storedToken = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
 
-    // Cek apakah token dan user ada di localStorage
     if (storedToken && storedUser) {
       try {
         const parsedUser: UserData = JSON.parse(storedUser);
         setToken(storedToken);
         setUser(parsedUser);
-
-        // Optional: Validasi token jika perlu (misalnya cek kadaluarsa)
-        // Token kadaluarsa harus diperiksa di sini jika menggunakan JWT
       } catch (err) {
         console.error("Error parsing user from localStorage", err);
         localStorage.removeItem("user");
