@@ -31,7 +31,7 @@ export const router = createBrowserRouter([
       {
         path: "/dashboard",
         element: (
-          <ProtectedRoute allowedRoles={["user"]}>
+          <ProtectedRoute allowedRoles={["USER"]}>
             <Home />
           </ProtectedRoute>
         ),
@@ -39,7 +39,7 @@ export const router = createBrowserRouter([
       {
         path: "/product/:id",
         element: (
-          <ProtectedRoute allowedRoles={["user"]}>
+          <ProtectedRoute allowedRoles={["USER"]}>
             <ProductDetail />
           </ProtectedRoute>
         ),
@@ -50,7 +50,7 @@ export const router = createBrowserRouter([
           {
             path: "",
             element: (
-              <ProtectedRoute allowedRoles={["admin"]}>
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
                 <HomeAdmin />
               </ProtectedRoute>
             ),
@@ -58,7 +58,7 @@ export const router = createBrowserRouter([
           {
             path: "create",
             element: (
-              <ProtectedRoute allowedRoles={["admin"]}>
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
                 <ProductForm />
               </ProtectedRoute>
             ),
@@ -66,7 +66,7 @@ export const router = createBrowserRouter([
           {
             path: "edit/:id",
             element: (
-              <ProtectedRoute allowedRoles={["admin"]}>
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
                 <ProductForm />
               </ProtectedRoute>
             ),
