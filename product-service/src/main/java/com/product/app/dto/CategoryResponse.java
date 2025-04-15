@@ -7,4 +7,5 @@ import lombok.Data;
 @Builder
 public class CategoryResponse {
     private String categoryType;
+    private Long categoryId;
 }

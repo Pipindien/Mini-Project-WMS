@@ -35,42 +35,46 @@ public class ProductService {
 
     public ProductResponse saveProduct(ProductRequest productRequest) throws JsonProcessingException {
         try {
-        Category category = categoryRepository.findCategoryByCategoryType(productRequest.getProductCategory())
-                .orElseThrow(() -> new CategoryNotFoundException("Category Not Found"));
+            Category category = categoryRepository.findById(productRequest.getCategoryId())
+                    .orElseThrow(() -> new CategoryNotFoundException("Category Not Found"));
 
-        Product product = Product.builder()
-                .productName(productRequest.getProductName())
-                .productPrice(productRequest.getProductPrice())
-                .productRate(productRequest.getProductRate())
-                .categoryId(category.getCategoryId())
-                .createdDate(new Date())
-                .productCategory(category.getCategoryType())
-                .isDeleted(false)
-                .build();
-        Product savedProduct = productRepository.save(product);
+            Product product = Product.builder()
+                    .productName(productRequest.getProductName())
+                    .productPrice(productRequest.getProductPrice())
+                    .productRate(productRequest.getProductRate())
+                    .categoryId(category.getCategoryId())
+                    .createdDate(new Date())
+                    .productCategory(category.getCategoryType()) // jika masih mau simpan categoryType
+                    .isDeleted(false)
+                    .build();
 
-        ProductResponse response = ProductResponse.builder()
-                .productId(savedProduct.getProductId())
-                .productName(savedProduct.getProductName())
-                .productPrice(savedProduct.getProductPrice())
-                .productRate(savedProduct.getProductRate())
-                .categoryId(savedProduct.getCategoryId())
-                .createdDate(savedProduct.getCreatedDate())
-                .productCategory(savedProduct.getProductCategory())
-                .build();
+            Product savedProduct = productRepository.save(product);
 
-        auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_SAVE,
-                mapper.writeValueAsString(productRequest), mapper.writeValueAsString(response),
-                "Insert Product Save");
+            ProductResponse response = ProductResponse.builder()
+                    .productId(savedProduct.getProductId())
+                    .productName(savedProduct.getProductName())
+                    .productPrice(savedProduct.getProductPrice())
+                    .productRate(savedProduct.getProductRate())
+                    .categoryId(savedProduct.getCategoryId())
+                    .createdDate(savedProduct.getCreatedDate())
+                    .productCategory(savedProduct.getProductCategory())
+                    .build();
 
-        return response;
+            auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_SAVE,
+                    mapper.writeValueAsString(productRequest),
+                    mapper.writeValueAsString(response),
+                    "Insert Product Save");
+
+            return response;
         } catch (CategoryNotFoundException ex) {
             auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_SAVE,
-                    mapper.writeValueAsString(productRequest), mapper.writeValueAsString(ex.getMessage()),
+                    mapper.writeValueAsString(productRequest),
+                    mapper.writeValueAsString(ex.getMessage()),
                     "Failed Save Product");
             throw ex;
         }
     }
+
 
     public ProductResponse getProductByProductName(String productName) throws JsonProcessingException {
         try {
@@ -141,51 +145,58 @@ public class ProductService {
         return productResponses;
     }
 
-
     public ProductResponse updateProduct(Long productId, ProductRequest productRequest) throws JsonProcessingException {
         try {
-        Product existingProduct = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException("Product Not Found"));
+            Product existingProduct = productRepository.findById(productId)
+                    .orElseThrow(() -> new ProductNotFoundException("Product Not Found"));
 
-        Category category = categoryRepository.findCategoryByCategoryType(productRequest.getProductCategory())
-                .orElseThrow(() -> new CategoryNotFoundException("Category Not Found"));
+            Category category = categoryRepository.findById(productRequest.getCategoryId())
+                    .orElseThrow(() -> new CategoryNotFoundException("Category Not Found"));
 
-        ProductResponse oldData = ProductResponse.builder()
-                .productId(existingProduct.getProductId())
-                .productName(existingProduct.getProductName())
-                .productPrice(existingProduct.getProductPrice())
-                .productRate(existingProduct.getProductRate())
-                .categoryId(existingProduct.getCategoryId())
-                .createdDate(existingProduct.getCreatedDate())
-                .productCategory(existingProduct.getProductCategory())
-                .build();
+            ProductResponse oldData = ProductResponse.builder()
+                    .productId(existingProduct.getProductId())
+                    .productName(existingProduct.getProductName())
+                    .productPrice(existingProduct.getProductPrice())
+                    .productRate(existingProduct.getProductRate())
+                    .categoryId(existingProduct.getCategoryId())
+                    .createdDate(existingProduct.getCreatedDate())
+                    .productCategory(existingProduct.getProductCategory())
+                    .build();
 
-        existingProduct.setProductName(productRequest.getProductName());
-        existingProduct.setProductPrice(productRequest.getProductPrice());
-        existingProduct.setProductRate(productRequest.getProductRate());
-        existingProduct.setCategoryId(category.getCategoryId());
-        existingProduct.setIsDeleted(false);
-        Product updatedProduct = productRepository.save(existingProduct);
+            existingProduct.setProductName(productRequest.getProductName());
+            existingProduct.setProductPrice(productRequest.getProductPrice());
+            existingProduct.setProductRate(productRequest.getProductRate());
+            existingProduct.setCategoryId(category.getCategoryId());
+            existingProduct.setProductCategory(category.getCategoryType()); // Sesuai dengan save
+            existingProduct.setIsDeleted(false);
 
-        ProductResponse response = ProductResponse.builder()
-                .productId(updatedProduct.getProductId())
-                .productName(updatedProduct.getProductName())
-                .productPrice(updatedProduct.getProductPrice())
-                .productRate(updatedProduct.getProductRate())
-                .categoryId(updatedProduct.getCategoryId())
-                .createdDate(updatedProduct.getCreatedDate())
-                .productCategory(updatedProduct.getProductCategory())
-                .build();
+            Product updatedProduct = productRepository.save(existingProduct);
 
-        auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_UPDATE,
-                mapper.writeValueAsString(oldData), mapper.writeValueAsString(response),
-                "Update Product Success");
+            ProductResponse response = ProductResponse.builder()
+                    .productId(updatedProduct.getProductId())
+                    .productName(updatedProduct.getProductName())
+                    .productPrice(updatedProduct.getProductPrice())
+                    .productRate(updatedProduct.getProductRate())
+                    .categoryId(updatedProduct.getCategoryId())
+                    .createdDate(updatedProduct.getCreatedDate())
+                    .productCategory(updatedProduct.getProductCategory())
+                    .build();
 
-        return response;
+            auditTrailsService.logsAuditTrails(
+                    GeneralConstant.LOG_ACVITIY_UPDATE,
+                    mapper.writeValueAsString(oldData),
+                    mapper.writeValueAsString(response),
+                    "Update Product Success"
+            );
+
+            return response;
         } catch (ProductNotFoundException | CategoryNotFoundException ex) {
-            auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_UPDATE,
-                    mapper.writeValueAsString(productRequest), mapper.writeValueAsString(ex.getMessage()),
-                    "Failed Update Product");
+            auditTrailsService.logsAuditTrails(
+                    GeneralConstant.LOG_ACVITIY_UPDATE,
+                    mapper.writeValueAsString(productRequest),
+                    mapper.writeValueAsString(ex.getMessage()),
+                    "Failed Update Product"
+            );
             throw ex;
         }
     }

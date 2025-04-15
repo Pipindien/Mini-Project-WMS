@@ -16,4 +16,6 @@ public class GeneralConstant {
 
     public static final String LOG_ACVITIY_GET_CATEGORY_TYPE= "Get Category Type";
 
+    public static final String LOG_ACVITIY_GET_ALL_CATEGORY= "Get ALL Category ";
+
 }

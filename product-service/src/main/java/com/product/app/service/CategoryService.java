@@ -11,7 +11,11 @@ import com.product.app.repository.CategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
 @Service
 public class CategoryService {
 
@@ -110,4 +114,36 @@ public class CategoryService {
             throw ex;
         }
     }
+
+    public List<CategoryResponse> getAllCategory() throws JsonProcessingException {
+        List<Category> categories = categoryRepository.findAll();
+
+        if (categories == null || categories.isEmpty()) {
+            String message = "No Category Found";
+            auditTrailsService.logsAuditTrails(
+                    GeneralConstant.LOG_ACVITIY_GET_ALL_CATEGORY,
+                    mapper.writeValueAsString("Get All Categories"),
+                    mapper.writeValueAsString(message),
+                    "Failed to Get Categories"
+            );
+            throw new CategoryNotFoundException(message);
+        }
+
+        List<CategoryResponse> categoryResponses = categories.stream()
+                .map(category -> CategoryResponse.builder()
+                        .categoryId(category.getCategoryId())
+                        .categoryType(category.getCategoryType())
+                        .build())
+                .collect(Collectors.toList());
+
+        auditTrailsService.logsAuditTrails(
+                GeneralConstant.LOG_ACVITIY_GET_ALL_CATEGORY,
+                mapper.writeValueAsString("Get All Categories"),
+                mapper.writeValueAsString(categoryResponses),
+                "Successfully Retrieved All Categories"
+        );
+
+        return categoryResponses;
+    }
+
 }
