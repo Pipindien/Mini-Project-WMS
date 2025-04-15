@@ -12,7 +12,7 @@ import com.financial_goal_service.app.constant.GeneralConstant;
 import com.financial_goal_service.app.repository.FinancialGoalRepository;
 import com.financial_goal_service.app.service.AuditTrailsService;
 import com.financial_goal_service.app.service.FinancialGoalService;
-import com.financial_goal_service.app.service.InsightService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,9 +29,6 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
 
     @Autowired
     private AuthClientService authClientService;
-
-    @Autowired
-    private InsightService insightService;
 
     @Autowired
     private ProductClient productClient;
@@ -62,12 +59,11 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
                         .currentAmount(goal.getCurrentAmount())
                         .status(goal.getStatus())
                         .custId(goal.getCustId())
+                        .insightMessage(goal.getInsightMessage())
                         .build())
                 .toList();
 
     }
-
-
 
     public String determineRiskTolerance(Integer age, Double salary) {
         if (age < 30) {
@@ -105,11 +101,9 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
             financialGoal.setCreatedDate(new Date());
             financialGoal.setDeleted(false);
             financialGoal.setStatus("Active");
-            financialGoal.setCurrentAmount(0);
+            financialGoal.setCurrentAmount(0.0);
+            financialGoal.setInsightMessage("Kamu sudah punya tujuan yang jelas! Yuk mulai investasi pertamamu untuk mencapainya.");
             financialGoal.setCustId(idCust);
-
-            String insight = insightService.generateInsight(financialGoal);
-            financialGoal.setInsightMessage(insight);
 
             FinancialGoal savedFinancialGoal = financialGoalRepository.save(financialGoal);
 
@@ -146,7 +140,6 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
         if (goalOpt.isPresent()) {
 
             FinancialGoal goal = goalOpt.get();
-            String insight = insightService.generateInsight(goal);
             FinancialGoalResponse response = FinancialGoalResponse.builder()
                     .goalId(goal.getGoalId())
                     .goalName(goal.getGoalName())
@@ -157,7 +150,7 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
                     .currentAmount(goal.getCurrentAmount())
                     .status(goal.getStatus())
                     .custId(goal.getCustId())
-                    .insightMessage(insight)
+                    .insightMessage(goal.getInsightMessage())
                     .build();
 
             auditTrailsService.logsAuditTrails(
@@ -211,50 +204,26 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
 
 
     @Override
-    public SuggestedPortfolioResponse getSuggestedPortfolio(Long goalId) {
-
+    public SuggestedPortfolioResponse getSuggestedPortfolio(Long goalId) throws JsonProcessingException {
         FinancialGoal goal = financialGoalRepository.findByGoalId(goalId)
                 .orElseThrow(() -> new RuntimeException("Financial Goal not found"));
 
         String riskTolerance = goal.getRiskTolerance();
-
-        List<PortfolioAllocation> allocations = switch (riskTolerance) {
-            case "Aggressive" -> List.of(
-                    PortfolioAllocation.builder().category("Saham").percentage(70).build(),
-                    PortfolioAllocation.builder().category("Obligasi").percentage(20).build(),
-                    PortfolioAllocation.builder().category("Pasar Uang").percentage(10).build()
-            );
-            case "Moderate" -> List.of(
-                    PortfolioAllocation.builder().category("Saham").percentage(50).build(),
-                    PortfolioAllocation.builder().category("Obligasi").percentage(30).build(),
-                    PortfolioAllocation.builder().category("Pasar Uang").percentage(20).build()
-            );
-            case "Conservative" -> List.of(
-                    PortfolioAllocation.builder().category("Saham").percentage(30).build(),
-                    PortfolioAllocation.builder().category("Obligasi").percentage(50).build(),
-                    PortfolioAllocation.builder().category("Pasar Uang").percentage(20).build()
-            );
-            default -> throw new IllegalArgumentException("Unknown risk tolerance: " + riskTolerance);
-        };
+        List<PortfolioAllocation> allocations = getPortfolioAllocationByRiskTolerance(riskTolerance);
 
         Map<String, List<RecommendedProduct>> recommendedProducts = new HashMap<>();
 
         for (PortfolioAllocation alloc : allocations) {
-            Long categoryId = mapCategoryToId(alloc.getCategory()); // mapping kategori ke ID
-            List<ProductResponse> products = productClient.getProductByCategoryId(categoryId);
-
-            List<RecommendedProduct> mapped = products.stream().map(p ->
-                    RecommendedProduct.builder()
-                            .productName(p.getProductName())
-                            .categoryId((p.getCategoryId()))
-                            .productRate(p.getProductRate())
-                            .productPrice(p.getProductPrice())
-                            .build()
-            ).toList();
-
-            recommendedProducts.put(alloc.getCategory(), mapped);
+            Long categoryId = mapCategoryToId(alloc.getCategory());
+            List<RecommendedProduct> products = getRecommendedProductsByCategoryId(categoryId);
+            recommendedProducts.put(alloc.getCategory(), products);
         }
-
+        auditTrailsService.logsAuditTrails(
+                GeneralConstant.LOG_ACTIVITY_GET_SUGGESTED_PORTO,
+                mapper.writeValueAsString(goalId),
+                mapper.writeValueAsString(goalId),
+                "Get Suggested Portfolio"
+        );
 
         return SuggestedPortfolioResponse.builder()
                 .goalId(goalId)
@@ -262,6 +231,7 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
                 .recommendedProducts(recommendedProducts)
                 .build();
     }
+
 
 
     @Override
@@ -277,11 +247,7 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
             goal.setGoalName(financialGoalRequest.getGoalName());
             goal.setTargetAmount(financialGoalRequest.getTargetAmount());
             goal.setTargetDate(financialGoalRequest.getTargetDate());
-            //goal.setRiskTolerance(financialGoalRequest.getRiskTolerance());
             goal.setUpdatedDate(new Date());
-
-            String updatedInsight = insightService.generateInsight(goal);
-            goal.setInsightMessage(updatedInsight);
 
             FinancialGoal updatedGoal = financialGoalRepository.save(goal);
 
@@ -318,7 +284,6 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
         if (goalOpt.isPresent()) {
 
             FinancialGoal goal = goalOpt.get();
-            String insight = insightService.generateInsight(goal);
             FinancialGoalResponse response = FinancialGoalResponse.builder()
                     .goalId(goal.getGoalId())
                     .goalName(goal.getGoalName())
@@ -329,7 +294,7 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
                     .currentAmount(goal.getCurrentAmount())
                     .status(goal.getStatus())
                     .custId(goal.getCustId())
-                    .insightMessage(insight)
+                    .insightMessage(goal.getInsightMessage())
                     .build();
 
             auditTrailsService.logsAuditTrails(
@@ -344,4 +309,63 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
             throw new RuntimeException("Goal not found");
         }
     }
+
+    private List<PortfolioAllocation> getPortfolioAllocationByRiskTolerance(String riskTolerance) {
+        return switch (riskTolerance) {
+            case "Aggressive" -> List.of(
+                    new PortfolioAllocation("Saham", 70),
+                    new PortfolioAllocation("Obligasi", 20),
+                    new PortfolioAllocation("Pasar Uang", 10)
+            );
+            case "Moderate" -> List.of(
+                    new PortfolioAllocation("Saham", 50),
+                    new PortfolioAllocation("Obligasi", 30),
+                    new PortfolioAllocation("Pasar Uang", 20)
+            );
+            case "Conservative" -> List.of(
+                    new PortfolioAllocation("Saham", 30),
+                    new PortfolioAllocation("Obligasi", 50),
+                    new PortfolioAllocation("Pasar Uang", 20)
+            );
+            default -> throw new IllegalArgumentException("Unknown risk tolerance: " + riskTolerance);
+        };
+    }
+
+    private List<RecommendedProduct> getRecommendedProductsByCategoryId(Long categoryId) {
+        List<ProductResponse> products = productClient.getProductByCategoryId(categoryId);
+
+        return products.stream()
+                .map(p -> RecommendedProduct.builder()
+                        .productName(p.getProductName())
+                        .categoryId(p.getCategoryId())
+                        .productRate(p.getProductRate())
+                        .productPrice(p.getProductPrice())
+                        .build())
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void updateProgress(Long goalId, UpdateProgressRequest request) throws JsonProcessingException {
+        FinancialGoal goal = financialGoalRepository.findById(goalId)
+                .orElseThrow(() -> new RuntimeException("Goal not found"));
+
+        if (request.getCurrentAmount() != null) {
+            goal.setCurrentAmount(request.getCurrentAmount());
+        }
+
+        if (request.getInsightMessage() != null) {
+            goal.setInsightMessage(request.getInsightMessage());
+        }
+        auditTrailsService.logsAuditTrails(
+                GeneralConstant.LOG_ACTIVITY_UPDATE_PROGRESS,
+                mapper.writeValueAsString(goalId),
+                mapper.writeValueAsString(request),
+                "Update Progress After Transaction"
+        );
+
+        financialGoalRepository.save(goal);
+    }
+
+
 }

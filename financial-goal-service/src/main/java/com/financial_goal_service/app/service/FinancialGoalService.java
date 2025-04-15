@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.financial_goal_service.app.dto.FinancialGoalRequest;
 import com.financial_goal_service.app.dto.FinancialGoalResponse;
 import com.financial_goal_service.app.dto.SuggestedPortfolioResponse;
+import com.financial_goal_service.app.dto.UpdateProgressRequest;
 
 import java.util.List;
 
@@ -17,11 +18,15 @@ public interface FinancialGoalService {
 
     String archiveGoal(Long goalId) throws JsonProcessingException;
 
-    SuggestedPortfolioResponse getSuggestedPortfolio(Long goalId);
+    SuggestedPortfolioResponse getSuggestedPortfolio(Long goalId) throws JsonProcessingException;
 
     FinancialGoalResponse updateFinancialGoal(Long goalId, String token, FinancialGoalRequest financialGoalRequest) throws JsonProcessingException;
 
     FinancialGoalResponse getGoalByName(String goalName, String token) throws JsonProcessingException;
+
+
+    void updateProgress(Long goalId, UpdateProgressRequest request) throws JsonProcessingException;
+
 
 }
 

@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.financial_goal_service.app.dto.FinancialGoalRequest;
 import com.financial_goal_service.app.dto.FinancialGoalResponse;
 import com.financial_goal_service.app.dto.SuggestedPortfolioResponse;
+import com.financial_goal_service.app.dto.UpdateProgressRequest;
 import com.financial_goal_service.app.service.FinancialGoalService;
+import com.financial_goal_service.app.service.impl.FinancialGoalServiceImpl;
 import com.financial_goal_service.app.utility.RestApiPath;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -62,7 +64,7 @@ public class FinancialGoalController {
 
 
     @GetMapping("/{goalId}/suggested-portfolio")
-    public ResponseEntity<SuggestedPortfolioResponse> getSuggestedPortfolio(@PathVariable Long goalId) {
+    public ResponseEntity<SuggestedPortfolioResponse> getSuggestedPortfolio(@PathVariable Long goalId) throws JsonProcessingException {
         SuggestedPortfolioResponse response = financialGoalService.getSuggestedPortfolio(goalId);
         return ResponseEntity.ok(response);
     }
@@ -74,6 +76,16 @@ public class FinancialGoalController {
     ) throws JsonProcessingException {
         FinancialGoalResponse goal = financialGoalService.getGoalByName(goalName, token);
         return ResponseEntity.ok(goal);
+    }
+
+    @PutMapping("/{id}/update-progress")
+    public ResponseEntity<String> updateProgress(
+            @PathVariable Long id,
+            @RequestBody UpdateProgressRequest request,
+            @RequestHeader("token") String token
+    ) throws JsonProcessingException {
+        financialGoalService.updateProgress(id, request);
+        return ResponseEntity.ok("Progress updated successfully");
     }
 
 }

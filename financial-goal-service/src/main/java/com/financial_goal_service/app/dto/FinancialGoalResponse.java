@@ -12,8 +12,8 @@ public class FinancialGoalResponse {
     private Long goalId;
     private Long custId;
     private String goalName;
-    private Integer targetAmount;
-    private Integer currentAmount;
+    private Double targetAmount;
+    private Double currentAmount;
     private Date targetDate;
     private String riskTolerance;
     private String status;

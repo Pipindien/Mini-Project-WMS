@@ -14,7 +14,7 @@ public class FinancialGoalRequest {
 
     @NotNull(message = "Target amount can't be empty")
     @Positive(message = "Target amount must be positive")
-    private Integer targetAmount;
+    private Double targetAmount;
 
     @NotNull(message = "Target date can't be empty")
     @Future(message = "Target date must be in the future")
