@@ -12,4 +12,5 @@ public class LoginResponse {
     private Long custId;
     private Integer age;
     private Double salary;
+    private String role;
 }

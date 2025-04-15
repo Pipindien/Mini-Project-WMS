@@ -108,6 +108,10 @@ public class LoginServiceImplementation implements LoginService {
 
             return LoginResponse.builder()
                     .token(jwtToken)
+                    .custId(user.getCustId())
+                    .salary(user.getSalary())
+                    .age(user.getAge())
+                    .role(user.getRole())
                     .build();
 
         } catch (UsernameNotFoundException | PasswordInvalidException ex) {
