@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/db_transaction
+    url: jdbc:postgresql://localhost:5432/db_transaction_wms
     username: postgres
-    password: admin
+    password: 12345
   jpa:
     hibernate:
       ddl-auto: update
@@ -19,9 +19,13 @@ auth-validate-token:
 
 product :
   url: http://localhost:8082/product/{productName}
+  urlById: http://localhost:8082/product/get/{productId}
 
 financial-goal:
   url: http://localhost:7070/financial-goal/get/{goalName}
+  urlUpdate: http://localhost:7070/financial-goal/{goalId}/update-progress
+  urlById: http://localhost:7070/financial-goal/{goalId}
+  urlGoalByIdCustomer: http://localhost:7070/financial-goal/
 
 gopay-transaction:
   url: https://private-190325-gopay2.apiary-mock.com//payment-transaction

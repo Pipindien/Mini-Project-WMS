@@ -6,6 +6,7 @@ import com.transaction.app.dto.TransactionRequest;
 import com.transaction.app.dto.TransactionResponse;
 import com.transaction.app.entity.Transaction;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 
 public interface TransactionService {
@@ -17,6 +18,8 @@ public interface TransactionService {
     TransactionResponse updateTransactionStatusOnly(String trxNumber, String status, String token) throws JsonProcessingException;
 
     List<TransactionResponse> sellByProductName(String productName, int lotToSell, String token) throws JsonProcessingException;
+
+    TransactionResponse sellByTrxNumber(String trxNumber, int lotToSell, String token) throws JsonProcessingException, AccessDeniedException;
 
     List<TransactionList> getTransactionStatus(String status);
 

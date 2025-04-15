@@ -1,6 +1,7 @@
 package com.transaction.app.client;
 
 import com.transaction.app.client.dto.ProductRequest;
+import com.transaction.app.client.dto.ProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,9 @@ public class ProductClient {
 
     @Value("${product.url}")
     private String productUrl;
+
+    @Value("${product.urlById}")
+    private String productUrlById;
 
     public ProductRequest getProductByProductByName(ProductRequest productRequest){
         String url = UriComponentsBuilder.fromUriString(productUrl)
@@ -38,6 +42,22 @@ public class ProductClient {
 
         } catch (Exception e) {
             System.err.println("Error saat memanggil API Product: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public ProductResponse getProductById (Long productId) {
+        String url = UriComponentsBuilder.fromUriString(productUrlById)
+                .buildAndExpand(productId)
+                .toUriString();
+
+        System.out.println("Memanggil API product: " + url);
+
+        try {
+            ResponseEntity<ProductResponse> responseEntity = restTemplate.getForEntity(url, ProductResponse.class);
+            return responseEntity.getBody();
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
             return null;
         }
     }

@@ -10,7 +10,6 @@ import com.transaction.app.client.UsersClient;
 import com.transaction.app.client.dto.FinancialGoalResponse;
 import com.transaction.app.client.dto.GopayResponse;
 import com.transaction.app.client.dto.ProductRequest;
-import com.transaction.app.client.dto.ProductResponse;
 import com.transaction.app.constant.GeneralConstant;
 import com.transaction.app.dto.TransactionList;
 import com.transaction.app.dto.TransactionRequest;
@@ -364,17 +363,17 @@ public class TransactionServiceImplementation implements TransactionService {
         }
 
         if (!"SUCCESS".equalsIgnoreCase(trx.getStatus()) || trx.getLot() <= 0) {
-            throw new IllegalArgumentException("Transaksi tidak valid untuk dijual");
+            throw new InvalidSellException("Transaksi tidak valid untuk dijual");
         }
 
         // Mengecek apakah jumlah lot yang ingin dijual tidak lebih banyak dari yang tersedia
         if (lotToSell > trx.getLot()) {
-            throw new IllegalArgumentException("Jumlah lot yang ingin dijual melebihi lot yang tersedia");
+            throw new InvalidSellException("Jumlah lot yang ingin dijual melebihi lot yang tersedia");
         }
 
         ProductRequest productRequest = new ProductRequest();
         productRequest.setProductId(trx.getProductId());
-        ProductResponse product = productClient.getProductById(productRequest.getProductId());
+        ProductRequest product = productClient.getProductById(productRequest.getProductId());
         if (product == null) {
             throw new ProductNotFoundException("Produk tidak ditemukan untuk transaksi ini");
         }
