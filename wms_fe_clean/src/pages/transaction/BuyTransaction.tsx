@@ -3,40 +3,24 @@ import { useParams } from "react-router-dom";
 import { buyTransaction } from "../../services/transaction/api";
 import { BuyTransactionRequest } from "../../services/transaction/type";
 import useProductById from "../hooks/useProduct/useProductById";
-import { getGoals } from "../../services/goal/api";
+import useGoal from "../hooks/useGoal/useGoal";
 
 const BuyTransaction: React.FC = () => {
   const { id } = useParams();
   const { product, loading, error } = useProductById(id);
+  const { goals, goalsLoading, goalsError } = useGoal();
+
   const [amount, setAmount] = useState<number>(0);
-  const [goalName, setGoalName] = useState<string>("Beli Mobil");
+  const [goalName, setGoalName] = useState<string>("");
   const [notes, setNotes] = useState<string>("Transaksi in Progress");
-  const [goals, setGoals] = useState<any[]>([]);
   const [success, setSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [goalsLoading, setGoalsLoading] = useState<boolean>(true);
-  const [goalsError, setGoalsError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchGoals = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      try {
-        const data = await getGoals(token);
-        console.log("Goals data:", data);
-        setGoals(data);
-        if (data.length > 0) setGoalName(data[0].goalName);
-        setGoalsLoading(false);
-      } catch (err) {
-        setGoalsError("Gagal mengambil data tujuan keuangan.");
-        setGoalsLoading(false);
-        console.error("Failed to fetch goals", err);
-      }
-    };
-
-    fetchGoals();
-  }, []);
+    if (goals.length > 0) {
+      setGoalName(goals[0].goalName);
+    }
+  }, [goals]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,10 +40,10 @@ const BuyTransaction: React.FC = () => {
     };
 
     try {
-      await buyTransaction(request, token); // <-- kirim token ke API
+      await buyTransaction(request, token);
       setSuccess(true);
       setSubmitError(null);
-    } catch (err: any) {
+    } catch (err) {
       setSubmitError("Gagal melakukan transaksi.");
       setSuccess(false);
     }
