@@ -7,6 +7,7 @@ import ProductDetail from "../pages/detail/productDetail";
 import Home from "../pages/home/home";
 import HomeAdmin from "../pages/admin/homeAdmin";
 import ProductForm from "../pages/admin/productForm";
+import BuyTransaction from "../pages/transaction/BuyTransaction";
 
 export const router = createBrowserRouter([
   {
@@ -41,6 +42,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={["USER"]}>
             <ProductDetail />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/buy/:id",
+        element: (
+          <ProtectedRoute allowedRoles={["USER"]}>
+            <BuyTransaction />
           </ProtectedRoute>
         ),
       },
