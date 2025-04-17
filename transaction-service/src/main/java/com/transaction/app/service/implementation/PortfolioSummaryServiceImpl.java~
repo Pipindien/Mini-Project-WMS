@@ -56,7 +56,7 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
     @Transactional
     public PortfolioSummaryResponse upsertPortfolioSummary(Long goalId, String token) throws JsonProcessingException {
         Long custId = usersClient.getIdCustFromToken(token);
-        List<Transaction> transactions = transactionRepository.findByCustIdAndGoalId(custId, goalId);
+        List<Transaction> transactions = transactionRepository.findByCustIdAndGoalIdAndStatus(custId, goalId, "SUCCESS");
         if (transactions.isEmpty()) return null;
 
         PortfolioSummary summary = portfolioSummaryRepository.findByCustIdAndGoalId(custId, goalId)

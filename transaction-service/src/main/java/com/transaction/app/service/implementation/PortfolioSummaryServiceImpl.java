@@ -65,6 +65,12 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
                         .custId(custId)
                         .build()));
 
+        if (summary.getProductDetails() != null) {
+            summary.getProductDetails().clear();
+        } else {
+            summary.setProductDetails(new ArrayList<>());
+        }
+
         summary.getProductDetails().clear();
 
         List<PortfolioProductDetail> detailList = new ArrayList<>();
