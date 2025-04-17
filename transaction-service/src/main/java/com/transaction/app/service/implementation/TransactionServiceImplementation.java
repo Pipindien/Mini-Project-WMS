@@ -100,7 +100,6 @@ public class TransactionServiceImplementation implements TransactionService {
         transaction.setAmount(transactionRequest.getAmount());
         transaction.setCustId(custId);
         transaction.setProductId(productResponse.getProductId());
-        transaction.setProductPrice(productResponse.getProductPrice());
         transaction.setLot(lot);
         transaction.setGoalId(financialGoalRequest.getGoalId());
         transaction.setCreatedDate(new Date());
@@ -126,7 +125,6 @@ public class TransactionServiceImplementation implements TransactionService {
                 .amount(savedTransaction.getAmount())
                 .custId(savedTransaction.getCustId())
                 .productId(savedTransaction.getProductId())
-                .productPrice(savedTransaction.getProductPrice())
                 .lot(savedTransaction.getLot())
                 .goalId(savedTransaction.getGoalId())
                 .notes(transactionRequest.getNotes())
@@ -169,8 +167,15 @@ public class TransactionServiceImplementation implements TransactionService {
                 "Get Gopay Status untuk update transaksi"
         );
 
+        // Ambil productPrice dari ProductClient berdasarkan productId
+        Long productId = existingTransaction.getProductId();
+        ProductResponse product = productClient.getProductById(productId);
+        if (product == null) {
+            throw new ProductNotFoundException("Produk tidak ditemukan berdasarkan ID: " + productId);
+        }
+
         // Hitung ulang lot
-        int lot = (int) (request.getAmount() / existingTransaction.getProductPrice());
+        int lot = (int) (request.getAmount() / product.getProductPrice());
 
         // Update transaksi
         existingTransaction.setStatus(gopayRequest.getStatus());
@@ -198,7 +203,6 @@ public class TransactionServiceImplementation implements TransactionService {
                 .amount(savedTransaction.getAmount())
                 .custId(savedTransaction.getCustId())
                 .productId(savedTransaction.getProductId())
-                .productPrice(savedTransaction.getProductPrice())
                 .lot(savedTransaction.getLot())
                 .goalId(savedTransaction.getGoalId())
                 .build();
@@ -212,7 +216,6 @@ public class TransactionServiceImplementation implements TransactionService {
 
         return response;
     }
-
     @Override
     public TransactionResponse updateTransactionStatusOnly(String trxNumber, String status, String token) throws JsonProcessingException {
         Long custId = usersClient.getIdCustFromToken(token);
@@ -243,7 +246,6 @@ public class TransactionServiceImplementation implements TransactionService {
                 .amount(savedTransaction.getAmount())
                 .custId(savedTransaction.getCustId())
                 .productId(savedTransaction.getProductId())
-                .productPrice(savedTransaction.getProductPrice())
                 .lot(savedTransaction.getLot())
                 .goalId(savedTransaction.getGoalId())
                 .notes("Status updated via PaymentService")
@@ -256,14 +258,13 @@ public class TransactionServiceImplementation implements TransactionService {
 
         ProductRequest productRequest = new ProductRequest();
         productRequest.setProductName(productName);
-        ProductRequest product = productClient.getProductByProductByName(productRequest);
-        if (product == null) {
+        ProductRequest productInfo = productClient.getProductByProductByName(productRequest);
+        if (productInfo == null) {
             throw new ProductNotFoundException("Produk tidak ditemukan: " + productName);
         }
 
         List<Transaction> transactions = transactionRepository.findByCustIdAndProductIdAndStatusOrderByCreatedDateAsc(
-                custId, product.getProductId(), "SUCCESS");
-
+                custId, productInfo.getProductId(), "SUCCESS");
 
         Map<LocalDate, Transaction> earliestPerDay = transactions.stream()
                 .collect(Collectors.toMap(
@@ -273,14 +274,13 @@ public class TransactionServiceImplementation implements TransactionService {
                 ));
         List<Transaction> filteredTransactions = new ArrayList<>(earliestPerDay.values());
 
-        if (transactions.isEmpty()) {
+        if (filteredTransactions.isEmpty()) {
             throw new TrxNumberNotFoundException("Tidak ada transaksi aktif untuk produk: " + productName);
         }
 
         List<TransactionResponse> responses = new ArrayList<>();
         int remainingLot = lotToSell;
 
-        //sort by desc created date lagi, array list index 0 adalah transaksi terdahulu
         for (Transaction trx : filteredTransactions) {
             if (remainingLot <= 0) break;
 
@@ -288,10 +288,16 @@ public class TransactionServiceImplementation implements TransactionService {
             int lotToProcess = Math.min(availableLot, remainingLot);
             remainingLot -= lotToProcess;
 
-            // === Perhitungan bunga harian ===
+            // Ambil ulang harga produk dari ProductClient berdasarkan ID
+            ProductResponse currentProduct = productClient.getProductById(trx.getProductId());
+            if (currentProduct == null) {
+                throw new ProductNotFoundException("Produk tidak ditemukan berdasarkan ID: " + trx.getProductId());
+            }
+
+            // Hitung harga jual per lot dengan bunga
             int nMonth = (int) DateHelper.calculateMonthDiff(trx.getCreatedDate(), LocalDate.now());
-            double rate = product.getProductRate(); // rate bulanan, misal 0.01 untuk 1%
-            double sellPricePerLot = trx.getProductPrice() * Math.pow(1 + rate, nMonth);
+            double rate = currentProduct.getProductRate(); // rate bulanan
+            double sellPricePerLot = currentProduct.getProductPrice() * Math.pow(1 + rate, nMonth);
             double totalSellAmount = sellPricePerLot * lotToProcess;
 
             // Simpan riwayat penjualan
@@ -307,14 +313,15 @@ public class TransactionServiceImplementation implements TransactionService {
             sellHistory.setGoalId(trx.getGoalId());
             transactionHistoryRepository.save(sellHistory);
 
+            // Update transaksi
             trx.setLot(availableLot - lotToProcess);
             trx.setUpdateDate(new Date());
             if (trx.getLot() == 0) {
                 trx.setStatus("sold");
             }
-
             transactionRepository.save(trx);
 
+            // Buat response
             TransactionResponse response = TransactionResponse.builder()
                     .status("SUCCESS")
                     .amount(totalSellAmount)
@@ -338,8 +345,10 @@ public class TransactionServiceImplementation implements TransactionService {
                 mapper.writeValueAsString(responses),
                 "Sell transaction by product name"
         );
+
         return responses;
     }
+
 
     @Override
     public TransactionResponse sellByTrxNumber(String trxNumber, int lotToSell, String token) throws JsonProcessingException, AccessDeniedException {
@@ -358,22 +367,20 @@ public class TransactionServiceImplementation implements TransactionService {
             throw new IllegalArgumentException("Transaksi tidak valid untuk dijual");
         }
 
-        // Mengecek apakah jumlah lot yang ingin dijual tidak lebih banyak dari yang tersedia
         if (lotToSell > trx.getLot()) {
             throw new IllegalArgumentException("Jumlah lot yang ingin dijual melebihi lot yang tersedia");
         }
 
-        ProductRequest productRequest = new ProductRequest();
-        productRequest.setProductId(trx.getProductId());
-        ProductResponse product = productClient.getProductById(productRequest.getProductId());
+        // Ambil data produk berdasarkan productId dari transaction
+        ProductResponse product = productClient.getProductById(trx.getProductId());
         if (product == null) {
             throw new ProductNotFoundException("Produk tidak ditemukan untuk transaksi ini");
         }
 
         // === Hitung hasil penjualan ===
         int nMonth = (int) DateHelper.calculateMonthDiff(trx.getCreatedDate(), LocalDate.now());
-        double rate = product.getProductRate();
-        double sellPricePerLot = trx.getProductPrice() * Math.pow(1 + rate, nMonth);
+        double rate = product.getProductRate(); // bulanan
+        double sellPricePerLot = product.getProductPrice() * Math.pow(1 + rate, nMonth); // gunakan harga dari client
         double totalSellAmount = sellPricePerLot * lotToSell;
 
         // Simpan riwayat penjualan
@@ -389,10 +396,10 @@ public class TransactionServiceImplementation implements TransactionService {
         sellHistory.setGoalId(trx.getGoalId());
         transactionHistoryRepository.save(sellHistory);
 
-        // Update transaksi, mengurangi lot sesuai dengan yang dijual
+        // Update transaksi
         trx.setLot(trx.getLot() - lotToSell);
         if (trx.getLot() == 0) {
-            trx.setStatus("sold"); // Jika semua lot sudah dijual, status jadi "sold"
+            trx.setStatus("sold");
         }
         trx.setUpdateDate(new Date());
         transactionRepository.save(trx);
@@ -409,13 +416,12 @@ public class TransactionServiceImplementation implements TransactionService {
                 .amount(totalSellAmount)
                 .custId(trx.getCustId())
                 .productId(trx.getProductId())
-                .productPrice(sellPricePerLot)
+                .productPrice(sellPricePerLot) // ✅ dari ProductClient
                 .lot(lotToSell)
                 .goalId(trx.getGoalId())
                 .notes("Sell via trxNumber")
                 .build();
     }
-
 
 
 
@@ -433,14 +439,16 @@ public class TransactionServiceImplementation implements TransactionService {
     public TransactionResponse getTransactionNumber(String trxNumber, String token) throws JsonProcessingException {
         Transaction transaction = transactionRepository.findTransactionByTrxNumber(trxNumber);
 
-        // Ambil productName dari ProductClient
         String productName = null;
+        Double productPrice = null;
         if (transaction.getProductId() != null) {
             ProductResponse product = productClient.getProductById(transaction.getProductId());
-            productName = product != null ? product.getProductName() : null;
+            if (product != null) {
+                productName = product.getProductName();
+                productPrice = product.getProductPrice();
+            }
         }
 
-        // Ambil goalName dari FingolClient
         String goalName = null;
         if (transaction.getGoalId() != null) {
             FinancialGoalResponse goal = fingolClient.getFinancialGoalById(transaction.getGoalId(), token);
@@ -454,10 +462,10 @@ public class TransactionServiceImplementation implements TransactionService {
         response.setLot(transaction.getLot());
         response.setCustId(transaction.getCustId());
         response.setProductId(transaction.getProductId());
-        response.setProductPrice(transaction.getProductPrice());
-        response.setProductName(productName);  // ← dari client
+        response.setProductPrice(productPrice);
+        response.setProductName(productName);
         response.setGoalId(transaction.getGoalId());
-        response.setGoalName(goalName);        // ← dari client
+        response.setGoalName(goalName);
 
         auditTrailsService.logsAuditTrails(
                 GeneralConstant.LOG_ACVITIY_GET_TRX_NUMBER,
@@ -470,7 +478,6 @@ public class TransactionServiceImplementation implements TransactionService {
     }
 
 
-
     public List<TransactionResponse> getTransactionsByCustId(String token) throws JsonProcessingException {
         Long custId = usersClient.getIdCustFromToken(token);
         List<Transaction> transactions = transactionRepository.findByCustId(custId);
@@ -478,14 +485,26 @@ public class TransactionServiceImplementation implements TransactionService {
         List<TransactionResponse> responses = new ArrayList<>();
 
         for (Transaction trx : transactions) {
+            // Ambil data produk
+            ProductResponse product = null;
+                product = productClient.getProductById(trx.getProductId());
+
+
+            // Ambil data goal
+            FinancialGoalResponse goal = null;
+                goal = fingolClient.getFinancialGoalById(trx.getGoalId(),token);
+
+
             TransactionResponse response = TransactionResponse.builder()
                     .status(trx.getStatus())
                     .amount(trx.getAmount())
                     .custId(trx.getCustId())
                     .productId(trx.getProductId())
-                    .productPrice(trx.getProductPrice())
                     .lot(trx.getLot())
                     .goalId(trx.getGoalId())
+                    .productName(product != null ? product.getProductName() : null)
+                    .productPrice(product != null ? product.getProductPrice() : null)
+                    .goalName(goal != null ? goal.getGoalName() : null)
                     .build();
 
             responses.add(response);
@@ -500,6 +519,7 @@ public class TransactionServiceImplementation implements TransactionService {
 
         return responses;
     }
+
 
     @Override
     public List<TransactionResponse> getTransactionsByGoalName(String token, String goalName) throws JsonProcessingException {
@@ -523,7 +543,6 @@ public class TransactionServiceImplementation implements TransactionService {
                     .amount(trx.getAmount())
                     .custId(trx.getCustId())
                     .productId(trx.getProductId())
-                    .productPrice(trx.getProductPrice())
                     .lot(trx.getLot())
                     .goalId(trx.getGoalId())
                     .build();

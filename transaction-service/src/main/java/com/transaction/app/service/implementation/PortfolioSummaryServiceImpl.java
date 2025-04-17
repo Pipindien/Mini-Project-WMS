@@ -71,15 +71,16 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
             summary.setProductDetails(new ArrayList<>());
         }
 
-        summary.getProductDetails().clear();
-
         List<PortfolioProductDetail> detailList = new ArrayList<>();
         double totalInvestment = 0.0;
         double totalEstimatedReturn = 0.0;
 
         for (Transaction transaction : transactions) {
             ProductResponse product = productClient.getProductById(transaction.getProductId());
-            double investmentAmount = transaction.getProductPrice() * transaction.getLot();
+            if (product == null) continue;
+
+            double productPrice = product.getProductPrice(); // ✅ harga ambil dari client
+            double investmentAmount = productPrice * transaction.getLot();
             int nMonth = (int) DateHelper.calculateMonthDiff(transaction.getCreatedDate(), LocalDate.now());
             double multiplier = Math.pow(1 + product.getProductRate(), nMonth);
             double estimatedReturn = investmentAmount * multiplier;
@@ -92,7 +93,7 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
                     .productName(product.getProductName())
                     .categoryId(product.getCategoryId())
                     .lot(transaction.getLot())
-                    .buyPrice(transaction.getProductPrice())
+                    .buyPrice(productPrice) // ✅ harga dari client
                     .productRate(product.getProductRate())
                     .investmentAmount(investmentAmount)
                     .estimatedReturn(estimatedReturn)
@@ -109,7 +110,6 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
         summary.setEstimatedReturn(totalEstimatedReturn);
         summary.setTotalProfit(totalEstimatedReturn - totalInvestment);
         summary.getProductDetails().addAll(detailList);
-
         summary = portfolioSummaryRepository.save(summary);
 
         return PortfolioSummaryResponse.builder()
@@ -132,7 +132,6 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
                         .build()).toList())
                 .build();
     }
-
 
     @Override
     public void updateProgress(Long goalId, String token) {

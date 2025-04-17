@@ -21,7 +21,6 @@ public class Transaction {
     private Integer lot;
     private Long custId;
     private Long productId;
-    private Double productPrice;
     private Long goalId;
     private Date createdDate;
     private Date updateDate;
