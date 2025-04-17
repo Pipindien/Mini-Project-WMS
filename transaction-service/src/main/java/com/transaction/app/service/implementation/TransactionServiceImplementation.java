@@ -27,7 +27,9 @@ import org.springframework.stereotype.Service;
 
 import java.nio.file.AccessDeniedException;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class TransactionServiceImplementation implements TransactionService {
@@ -262,6 +264,15 @@ public class TransactionServiceImplementation implements TransactionService {
         List<Transaction> transactions = transactionRepository.findByCustIdAndProductIdAndStatusOrderByCreatedDateAsc(
                 custId, product.getProductId(), "SUCCESS");
 
+
+        Map<LocalDate, Transaction> earliestPerDay = transactions.stream()
+                .collect(Collectors.toMap(
+                        trx -> trx.getCreatedDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
+                        trx -> trx,
+                        (existing, replacement) -> existing
+                ));
+        List<Transaction> filteredTransactions = new ArrayList<>(earliestPerDay.values());
+
         if (transactions.isEmpty()) {
             throw new TrxNumberNotFoundException("Tidak ada transaksi aktif untuk produk: " + productName);
         }
@@ -269,7 +280,8 @@ public class TransactionServiceImplementation implements TransactionService {
         List<TransactionResponse> responses = new ArrayList<>();
         int remainingLot = lotToSell;
 
-        for (Transaction trx : transactions) {
+        //sort by desc created date lagi, array list index 0 adalah transaksi terdahulu
+        for (Transaction trx : filteredTransactions) {
             if (remainingLot <= 0) break;
 
             int availableLot = trx.getLot();
