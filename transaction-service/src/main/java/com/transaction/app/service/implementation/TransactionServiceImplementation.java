@@ -119,6 +119,7 @@ public class TransactionServiceImplementation implements TransactionService {
         transactionHistoryRepository.save(transactionHistory);
 
         TransactionResponse response = TransactionResponse.builder()
+                .trxNumber(savedTransaction.getTrxNumber())
                 .status(savedTransaction.getStatus())
                 .amount(savedTransaction.getAmount())
                 .custId(savedTransaction.getCustId())
@@ -143,72 +144,51 @@ public class TransactionServiceImplementation implements TransactionService {
     public TransactionResponse updateTransaction(TransactionRequest request, String trxNumber, String token) throws JsonProcessingException {
         Long custId = usersClient.getIdCustFromToken(token);
 
-        ProductRequest productRequest = new ProductRequest();
-        productRequest.setProductName(request.getProductName());
-
-        ProductRequest productResponse = productClient.getProductByProductByName(productRequest);
-        if (productResponse == null) {
-            throw new ProductNotFoundException("Product tidak ditemukan: " + request.getProductName());
-        }
-
         Transaction existingTransaction = getTrxNumber(trxNumber);
         if (existingTransaction == null) {
             throw new TrxNumberNotFoundException("Invalid Trx Number: " + trxNumber);
         }
 
-        FinancialGoalResponse financialGoalResponse = new FinancialGoalResponse();
-        financialGoalResponse.setGoalName(request.getGoalName());
-
-        FinancialGoalResponse financialGoalRequest = fingolClient.getFinansialGoalByName(financialGoalResponse, token);
-
-        if (financialGoalRequest == null || !financialGoalRequest.getCustId().equals(custId)) {
-            throw new GoalNotFoundException("Financial Goal tidak ditemukan atau bukan milik user: " + request.getGoalName());
+        // Cek apakah transaksi ini milik user yang sama
+        if (!existingTransaction.getCustId().equals(custId)) {
+            throw new RuntimeException("Transaksi bukan milik user.");
         }
 
-
-        GopayResponse gopayResponse = new GopayResponse();
-        GopayResponse gopayRequest = gopayClient.getGopayStatus(gopayResponse);
-        if (gopayRequest == null || gopayRequest.getPhone() == null) {
-            throw new PhoneNotFoundException("Phone tidak ditemukan untuk user dengan ID: " + custId);
+        // Ambil status dari Gopay
+        GopayResponse gopayRequest = gopayClient.getGopayStatus(new GopayResponse());
+        if (gopayRequest == null || gopayRequest.getStatus() == null) {
+            throw new RuntimeException("Gagal mengambil status Gopay");
         }
 
         auditTrailsService.logsAuditTrails(
                 GeneralConstant.LOG_ACVITIY_GOPAY_STATUS,
-                mapper.writeValueAsString(gopayResponse),
+                mapper.writeValueAsString(new GopayResponse()),
                 mapper.writeValueAsString(gopayRequest),
-                "Insert Transaction Into Gopay Status"
+                "Get Gopay Status untuk update transaksi"
         );
 
-        int lot = (int) (request.getAmount() / productResponse.getProductPrice());
+        // Hitung ulang lot
+        int lot = (int) (request.getAmount() / existingTransaction.getProductPrice());
 
+        // Update transaksi
         existingTransaction.setStatus(gopayRequest.getStatus());
         existingTransaction.setAmount(request.getAmount());
-        existingTransaction.setCustId(custId);
-        existingTransaction.setProductId(productResponse.getProductId());
-        existingTransaction.setProductPrice(productResponse.getProductPrice());
         existingTransaction.setLot(lot);
         existingTransaction.setUpdateDate(new Date());
 
-        if (financialGoalRequest != null) {
-            existingTransaction.setGoalId(financialGoalRequest.getGoalId());
-        }
-
         Transaction savedTransaction = transactionRepository.save(existingTransaction);
 
+        // Simpan ke history
         TransactionHistory transactionHistory = new TransactionHistory();
-        transactionHistory.setStatus(gopayRequest.getStatus());
-        transactionHistory.setCustId(custId);
-        transactionHistory.setProductId(productResponse.getProductId());
-        transactionHistory.setAmount(request.getAmount());
-        transactionHistory.setCreatedDate(new Date());
-        transactionHistory.setNotes(request.getNotes());
         transactionHistory.setTransaction(savedTransaction);
+        transactionHistory.setCustId(custId);
+        transactionHistory.setProductId(savedTransaction.getProductId());
+        transactionHistory.setStatus(savedTransaction.getStatus());
+        transactionHistory.setAmount(savedTransaction.getAmount());
         transactionHistory.setLot(lot);
-
-        if (financialGoalRequest != null) {
-            transactionHistory.setGoalId(financialGoalRequest.getGoalId());
-        }
-
+        transactionHistory.setNotes(request.getNotes());
+        transactionHistory.setCreatedDate(new Date());
+        transactionHistory.setGoalId(savedTransaction.getGoalId());
         transactionHistoryRepository.save(transactionHistory);
 
         TransactionResponse response = TransactionResponse.builder()
@@ -219,14 +199,13 @@ public class TransactionServiceImplementation implements TransactionService {
                 .productPrice(savedTransaction.getProductPrice())
                 .lot(savedTransaction.getLot())
                 .goalId(savedTransaction.getGoalId())
-                .notes(request.getNotes())
                 .build();
 
         auditTrailsService.logsAuditTrails(
                 GeneralConstant.LOG_ACVITIY_UPDATE,
                 mapper.writeValueAsString(request),
                 mapper.writeValueAsString(response),
-                "Insert Transaction Update"
+                "Update transaksi oleh user"
         );
 
         return response;
@@ -439,18 +418,46 @@ public class TransactionServiceImplementation implements TransactionService {
     }
 
     @Override
-    public Transaction getTransactionNumber(String trxNumber) throws JsonProcessingException {
+    public TransactionResponse getTransactionNumber(String trxNumber, String token) throws JsonProcessingException {
         Transaction transaction = transactionRepository.findTransactionByTrxNumber(trxNumber);
+
+        // Ambil productName dari ProductClient
+        String productName = null;
+        if (transaction.getProductId() != null) {
+            ProductResponse product = productClient.getProductById(transaction.getProductId());
+            productName = product != null ? product.getProductName() : null;
+        }
+
+        // Ambil goalName dari FingolClient
+        String goalName = null;
+        if (transaction.getGoalId() != null) {
+            FinancialGoalResponse goal = fingolClient.getFinancialGoalById(transaction.getGoalId(), token);
+            goalName = goal != null ? goal.getGoalName() : null;
+        }
+
+        TransactionResponse response = new TransactionResponse();
+        response.setTrxNumber(transaction.getTrxNumber());
+        response.setStatus(transaction.getStatus());
+        response.setAmount(transaction.getAmount());
+        response.setLot(transaction.getLot());
+        response.setCustId(transaction.getCustId());
+        response.setProductId(transaction.getProductId());
+        response.setProductPrice(transaction.getProductPrice());
+        response.setProductName(productName);  // ← dari client
+        response.setGoalId(transaction.getGoalId());
+        response.setGoalName(goalName);        // ← dari client
 
         auditTrailsService.logsAuditTrails(
                 GeneralConstant.LOG_ACVITIY_GET_TRX_NUMBER,
                 mapper.writeValueAsString(transaction),
-                mapper.writeValueAsString(transaction),
+                mapper.writeValueAsString(response),
                 "Insert Get TRXNumber"
         );
 
-        return transaction;
+        return response;
     }
+
+
 
     public List<TransactionResponse> getTransactionsByCustId(String token) throws JsonProcessingException {
         Long custId = usersClient.getIdCustFromToken(token);

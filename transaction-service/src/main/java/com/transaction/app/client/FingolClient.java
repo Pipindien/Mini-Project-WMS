@@ -117,35 +117,27 @@ public class FingolClient {
     }
 
 
-    public FinancialGoalResponse getFinancialGoalById(FinancialGoalResponse financialGoalResponse, String token) {
-        try {
-            String url = fingolUrlById;
+    public FinancialGoalResponse getFinancialGoalById(Long goalId, String token) {
+
+            String url = fingolUrlById.replace("{goalId}", String.valueOf(goalId));
 
             HttpHeaders headers = new HttpHeaders();
             headers.set("token", token);
-
             HttpEntity<Void> entity = new HttpEntity<>(headers);
 
+            // Perform the API call to get the financial goal
             ResponseEntity<FinancialGoalResponse> responseEntity = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    FinancialGoalResponse.class,
-                    financialGoalResponse.getGoalId()
+                    FinancialGoalResponse.class
             );
 
             FinancialGoalResponse responseBody = responseEntity.getBody();
 
-            if (responseBody == null || responseBody.getGoalId() == null) {
-                System.out.println("Financial Goal ID tidak ditemukan untuk: " + financialGoalResponse.getGoalId());
-                return null;
-            }
-
             return responseBody;
 
-        } catch (Exception e) {
-            System.err.println("Error saat memanggil API Financial Goal: " + e.getMessage());
-            return null;
-        }
+
     }
+
 }

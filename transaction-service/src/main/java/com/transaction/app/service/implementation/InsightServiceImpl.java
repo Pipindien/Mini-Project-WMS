@@ -28,20 +28,16 @@ public class InsightServiceImpl implements InsightService {
 
     @Override
     public InsightResponse generateInsight(Long goalId, String token) {
-        FinancialGoalResponse request = new FinancialGoalResponse();
-        request.setGoalId(goalId);
-        FinancialGoalResponse financialGoalResponse = fingolClient.getFinancialGoalById(request, token);
+        FinancialGoalResponse financialGoalResponse = fingolClient.getFinancialGoalById(goalId, token);
 
         if (financialGoalResponse == null) {
             throw new RuntimeException("Financial Goal tidak ditemukan dengan ID: " + goalId);
         }
 
-        // Ambil data dari Fingol microservice
         Double targetAmount = financialGoalResponse.getTargetAmount();
         Date targetDateUtil = financialGoalResponse.getTargetDate();
         LocalDate targetDate = convertToLocalDate(targetDateUtil); // Convert Date to LocalDate
 
-        // Ambil data dari Portfolio Summary (microservice ini sendiri)
         PortfolioSummary summary = portfolioSummaryRepository.findOneByGoalId(goalId)
                 .orElseThrow(() -> new RuntimeException("Goal ID not found in portfolio summary: " + goalId));
 
@@ -50,9 +46,10 @@ public class InsightServiceImpl implements InsightService {
         double avgDailyRate = calculateAverageDailyRate(products);
 
         long monthsRemaining = ChronoUnit.MONTHS.between(LocalDate.now(), targetDate);
-        double monthlyRate = avgDailyRate; // INI RATE NYA DIITUNG PER MONTH DULU
+        double monthlyRate = avgDailyRate;
 
         double futureValue = currentAmount * Math.pow(1 + monthlyRate, monthsRemaining);
+
         double needed = targetAmount - futureValue;
 
         double monthlyInvestment = (needed <= 0 || monthsRemaining <= 0) ? 0 :

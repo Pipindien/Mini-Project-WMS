@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/transaction")
 public class TransactionController {
@@ -74,10 +75,13 @@ public class TransactionController {
     }
 
     @GetMapping("/{trxNumber}")
-    public ResponseEntity<Transaction> getTransactionNumber(
-            @PathVariable String trxNumber) throws JsonProcessingException {
-        return ResponseEntity.ok(transactionService.getTransactionNumber(trxNumber));
+    public ResponseEntity<TransactionResponse> getTransactionNumber(
+            @PathVariable String trxNumber,
+            @RequestHeader("token") String token) throws JsonProcessingException {
+        return ResponseEntity.ok(transactionService.getTransactionNumber(trxNumber, token));
     }
+
+
 
     @GetMapping
     public ResponseEntity<List<TransactionList>> getAllTransaction(
