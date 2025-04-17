@@ -1,0 +1,4 @@
+package com.financial_goal_service.app.configuration;
+
+public class WebConfig {
+}

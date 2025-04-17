@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Date;
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:5173")
+
 @RestController
 @RequestMapping(RestApiPath.FINANCIALGOAL_API_PATH)
 public class FinancialGoalController {
