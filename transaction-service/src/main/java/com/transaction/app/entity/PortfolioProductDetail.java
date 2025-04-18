@@ -24,7 +24,7 @@ public class PortfolioProductDetail {
     private Long custId;
     private Long productId;
     private String productName;
-    private Long categoryId;
+    private String productCategory;
 
     private Integer lot;
     private Double buyPrice;

@@ -1,4 +1,0 @@
-package com.transaction.app.dto.insight;
-
-public class InsightResponse {
-}

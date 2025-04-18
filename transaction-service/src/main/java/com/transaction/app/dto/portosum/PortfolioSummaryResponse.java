@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -16,5 +17,7 @@ public class PortfolioSummaryResponse {
     private Double totalInvestment;
     private Double estimatedReturn;
     private Double totalProfit;
+    private double returnPercentage;
+    private Map<String, Double> categoryAllocation; // e.g., "Saham" => 60.0
     private List<PortfolioProductDetailResponse> portfolioProductDetails;
 }

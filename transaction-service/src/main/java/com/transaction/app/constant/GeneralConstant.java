@@ -12,4 +12,9 @@ public class GeneralConstant {
 
     public static final String LOG_ACVITIY_SELL = "Sell Transaction";
 
+    public static final String LOG_ACVITIY_UPSERTPORTFOLIO = "Update & Insert Portfolio Summary";
+    public static final String LOG_ACVITIY_DASHBOARD_OVERVIEW = "Get Dashboard Overview";
+    public static final String LOG_ACVITIY_DASHBOARD_DETAIL = "Get Dashboard Detail";
+    public static final String LOG_ACVITIY_UPDATE_PROGRESS = "Update Progress in Financial Goal";
+
 }

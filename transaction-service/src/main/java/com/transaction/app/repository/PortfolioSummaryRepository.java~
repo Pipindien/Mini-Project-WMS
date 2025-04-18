@@ -18,6 +18,4 @@ public interface PortfolioSummaryRepository extends JpaRepository<PortfolioSumma
 
 
     Optional<PortfolioSummary> findByCustIdAndGoalId(Long custId, Long goalId);
-    List<PortfolioSummary> findAllByCustId(Long custId);
-
 }

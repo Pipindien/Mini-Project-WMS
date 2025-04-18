@@ -324,7 +324,6 @@ public class TransactionServiceImplementation implements TransactionService {
                     .amount(totalSellAmount)
                     .custId(custId)
                     .productId(trx.getProductId())
-                    .productName(currentProduct.getProductName())
                     .productPrice(sellPricePerLot)
                     .lot(lotToProcess)
                     .goalId(trx.getGoalId())
