@@ -21,7 +21,7 @@ public interface TransactionService {
 
     TransactionResponse sellByTrxNumber(String trxNumber, int lotToSell, String token) throws JsonProcessingException, AccessDeniedException;
 
-    List<TransactionList> getTransactionStatus(String status);
+    List<TransactionList> getTransactionStatusAndCust(String status, String token);
 
     Transaction getTrxNumber(String trxNumber);
 

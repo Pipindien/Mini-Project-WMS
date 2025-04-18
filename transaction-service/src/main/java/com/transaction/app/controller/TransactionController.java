@@ -81,12 +81,12 @@ public class TransactionController {
         return ResponseEntity.ok(transactionService.getTransactionNumber(trxNumber, token));
     }
 
-
-
-    @GetMapping
-    public ResponseEntity<List<TransactionList>> getAllTransaction(
+    @GetMapping("/history")
+    public ResponseEntity<List<TransactionList>> getTransactionByStatusAndCust(
+            @RequestHeader String token,
             @RequestParam("status") String status) {
-        return ResponseEntity.ok(transactionService.getTransactionStatus(status));
+
+        return ResponseEntity.ok(transactionService.getTransactionStatusAndCust(status, token));
     }
 
     @GetMapping("/my")

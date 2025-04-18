@@ -414,18 +414,41 @@ public class TransactionServiceImplementation implements TransactionService {
                 .amount(totalSellAmount)
                 .custId(trx.getCustId())
                 .productId(trx.getProductId())
-                .productPrice(sellPricePerLot) // ✅ dari ProductClient
+                .productPrice(sellPricePerLot)
                 .lot(lotToSell)
                 .goalId(trx.getGoalId())
                 .notes("Sell via trxNumber")
                 .build();
     }
 
-
-
     @Override
-    public List<TransactionList> getTransactionStatus(String status) {
-        return transactionHistoryRepository.findTransactionListByStatus(status);
+    public List<TransactionList> getTransactionStatusAndCust(String status, String token) {
+        Long custId = usersClient.getIdCustFromToken(token);
+
+        List<TransactionList> transactions = transactionHistoryRepository
+                .findTransactionListByStatusAndCustId(status, custId);
+
+        if (transactions == null || transactions.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        for (TransactionList trx : transactions) {
+
+
+            ProductResponse product = productClient.getProductById(trx.getProductId());
+            if (product != null) {
+                trx.setProductName(product.getProductName());
+                trx.setProductPrice(product.getProductPrice());
+            }
+
+
+            FinancialGoalResponse goal = fingolClient.getFinancialGoalById(trx.getGoalId(), token);
+            if (goal != null) {
+                trx.setGoalName(goal.getGoalName());
+            }
+        }
+
+        return transactions;
     }
 
     @Override
@@ -476,6 +499,7 @@ public class TransactionServiceImplementation implements TransactionService {
     }
 
 
+    @Override
     public List<TransactionResponse> getTransactionsByCustId(String token) throws JsonProcessingException {
         Long custId = usersClient.getIdCustFromToken(token);
         List<Transaction> transactions = transactionRepository.findByCustId(custId);
@@ -483,12 +507,9 @@ public class TransactionServiceImplementation implements TransactionService {
         List<TransactionResponse> responses = new ArrayList<>();
 
         for (Transaction trx : transactions) {
-            // Ambil data produk
             ProductResponse product = null;
                 product = productClient.getProductById(trx.getProductId());
 
-
-            // Ambil data goal
             FinancialGoalResponse goal = null;
                 goal = fingolClient.getFinancialGoalById(trx.getGoalId(),token);
 
@@ -517,7 +538,6 @@ public class TransactionServiceImplementation implements TransactionService {
 
         return responses;
     }
-
 
     @Override
     public List<TransactionResponse> getTransactionsByGoalName(String token, String goalName) throws JsonProcessingException {

@@ -12,6 +12,7 @@ import java.util.List;
 @Repository
 public interface TransactionHistoryRepository extends JpaRepository<TransactionHistory, Long> {
 
-    @Query("SELECT new com.transaction.app.dto.TransactionList(t.trxNumber, th.id, th.amount, th.status, th.custId, th.lot, th.productId, th.goalId, th.notes, th.createdDate) FROM TransactionHistory th JOIN th.transaction t where th.status=:status")
-    List<TransactionList> findTransactionListByStatus(@Param("status") String status);
+    @Query("SELECT new com.transaction.app.dto.TransactionList(t.trxNumber, th.id, th.amount, th.status, th.custId, th.lot, th.productId, th.goalId, th.notes, th.createdDate) FROM TransactionHistory th JOIN th.transaction t WHERE th.status = :status AND th.custId = :custId")
+    List<TransactionList> findTransactionListByStatusAndCustId(@Param("status") String status, @Param("custId") Long custId);
+
 }
