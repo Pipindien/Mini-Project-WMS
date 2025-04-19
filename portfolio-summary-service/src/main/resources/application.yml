@@ -1,0 +1,20 @@
+server:
+  port: 7071
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/db_portfolio_summary
+    username: postgres
+    password: 12345
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+audit-trails:
+  url: http://localhost:8080/audit-trails/save
+financial-goal:
+  url: http://localhost:7070/financial-goal/{goalId}
+transaction-my:
+  url: http://localhost:8081/transaction/myGoal/{goalId}
+product-service:
+  url: http://localhost:8082/product/get/{productId}
+
