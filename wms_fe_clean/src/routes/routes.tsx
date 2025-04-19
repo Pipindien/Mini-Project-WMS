@@ -7,9 +7,13 @@ import ProductDetail from "../pages/detail/productDetail";
 import Home from "../pages/home/home";
 import HomeAdmin from "../pages/admin/homeAdmin";
 import ProductForm from "../pages/admin/productForm";
-import BuyTransaction from "../pages/transaction/BuyTransaction";
-import PaymentPage from "../pages/transaction/PaymentPage";
+import BuyTransaction from "../pages/transaction/buyTransaction";
+import PaymentPage from "../pages/transaction/paymentPage";
 import HistoryTransaction from "../pages/transaction/historyTransaction";
+import HomePortfolio from "../pages/portfolio/PortfolioPage";
+import PortfolioForm from "../pages/portfolio/PortfolioForm";
+import GoalDetailPage from "../pages/portfolio/GoalDetailPage";
+import PortfolioRecommendation from "../pages/portfolio/PortfolioRecommendation";
 
 export const router = createBrowserRouter([
   {
@@ -68,6 +72,40 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={["USER"]}>
             <HistoryTransaction />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/portfolio",
+        element: (
+          <ProtectedRoute allowedRoles={["USER"]}>
+            <HomePortfolio />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/portfolio/create",
+        element: (
+          <ProtectedRoute allowedRoles={["USER"]}>
+            <PortfolioForm />
+          </ProtectedRoute>
+        ),
+      },
+
+      {
+        path: "/portfolio/:goalId/recommendation",
+        element: (
+          <ProtectedRoute allowedRoles={["USER"]}>
+            <PortfolioRecommendation />
+          </ProtectedRoute>
+        ),
+      },
+
+      {
+        path: "/portfolio/detail/:goalId",
+        element: (
+          <ProtectedRoute allowedRoles={["USER"]}>
+            <GoalDetailPage />
           </ProtectedRoute>
         ),
       },

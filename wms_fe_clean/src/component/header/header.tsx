@@ -16,7 +16,7 @@ const Header: React.FC = () => {
             Dashboard
           </Link>
           <a
-            href="#"
+            href="/portfolio"
             className="hover:underline hover:text-gray-200 transition"
           >
             Portfolio
