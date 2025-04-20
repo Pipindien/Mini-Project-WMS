@@ -111,20 +111,37 @@ public class TransactionController {
         String productName = (String) requestBody.get("productName");
         int lot = (Integer) requestBody.get("lot");
 
-        List<TransactionResponse> responses = transactionService.sellByProductName(productName, lot, token);
+        // Periksa jika goalId bukan null dan konversi dengan aman
+        Object goalIdObj = requestBody.get("goalId");
+        Long goalId = null;
+        if (goalIdObj instanceof String) {
+            goalId = Long.parseLong((String) goalIdObj); // Mengonversi dari String ke Long
+        } else if (goalIdObj instanceof Integer) {
+            goalId = ((Integer) goalIdObj).longValue(); // Mengonversi dari Integer ke Long
+        } else if (goalIdObj instanceof Long) {
+            goalId = (Long) goalIdObj; // Jika sudah Long, tidak perlu konversi
+        }
+
+        if (goalId == null) {
+            return ResponseEntity.badRequest().body(null); // Mengembalikan response bad request jika goalId tidak valid
+        }
+
+        // Panggil service dengan parameter goalId
+        List<TransactionResponse> responses = transactionService.sellByProductName(productName, lot, goalId, token);
 
         // Ambil goalId yang terdampak dan update portfolio
         Set<Long> affectedGoals = responses.stream()
                 .map(TransactionResponse::getGoalId)
                 .collect(Collectors.toSet());
 
-        for (Long goalId : affectedGoals) {
-            portfolioSummaryService.upsertPortfolioSummary(goalId, token);
-            portfolioSummaryService.updateProgress(goalId, token);
+        for (Long affectedGoalId : affectedGoals) {
+            portfolioSummaryService.upsertPortfolioSummary(affectedGoalId, token);
+            portfolioSummaryService.updateProgress(affectedGoalId, token);
         }
 
         return ResponseEntity.ok(responses);
     }
+
 
     @PostMapping("/sell/{trxNumber}")
     public ResponseEntity<TransactionResponse> sellByTrxNumber(

@@ -20,7 +20,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     List<Transaction> findByCustIdAndGoalId(Long custId, Long goalId);
 
-    List<Transaction> findByCustIdAndProductIdAndStatusOrderByCreatedDateAsc(Long custId, Long productId, String status);
+    List<Transaction> findByCustIdAndProductIdAndGoalIdAndStatusOrderByCreatedDateAsc(Long custId, Long productId, Long goalId, String status);
 
     List<Transaction> findByCustIdAndGoalIdAndStatus(Long custId, Long goalId, String status);
 

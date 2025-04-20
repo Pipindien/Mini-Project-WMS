@@ -253,7 +253,7 @@ public class TransactionServiceImplementation implements TransactionService {
     }
 
     @Override
-    public List<TransactionResponse> sellByProductName(String productName, int lotToSell, String token) throws JsonProcessingException {
+    public List<TransactionResponse> sellByProductName(String productName, int lotToSell, Long goalId, String token) throws JsonProcessingException {
         Long custId = usersClient.getIdCustFromToken(token);
 
         ProductRequest productRequest = new ProductRequest();
@@ -263,8 +263,8 @@ public class TransactionServiceImplementation implements TransactionService {
             throw new ProductNotFoundException("Produk tidak ditemukan: " + productName);
         }
 
-        List<Transaction> transactions = transactionRepository.findByCustIdAndProductIdAndStatusOrderByCreatedDateAsc(
-                custId, productInfo.getProductId(), "SUCCESS");
+        List<Transaction> transactions = transactionRepository.findByCustIdAndProductIdAndGoalIdAndStatusOrderByCreatedDateAsc(
+                custId, productInfo.getProductId(), goalId,"SUCCESS");
 
         if (transactions.isEmpty()) {
             throw new TrxNumberNotFoundException("Tidak ada transaksi aktif untuk produk: " + productName);
@@ -285,17 +285,22 @@ public class TransactionServiceImplementation implements TransactionService {
             int lotToProcess = Math.min(availableLot, remainingLot);
             remainingLot -= lotToProcess;
 
-            // Ambil ulang harga produk dari ProductClient berdasarkan ID
             ProductResponse currentProduct = productClient.getProductById(trx.getProductId());
             if (currentProduct == null) {
                 throw new ProductNotFoundException("Produk tidak ditemukan berdasarkan ID: " + trx.getProductId());
             }
 
-            // Hitung harga jual per lot dengan bunga
-            int nMonth = (int) DateHelper.calculateMonthDiff(trx.getCreatedDate(), LocalDate.now());
-            double rate = currentProduct.getProductRate(); // rate bulanan
-            double sellPricePerLot = currentProduct.getProductPrice() * Math.pow(1 + rate, nMonth);
-            double totalSellAmount = sellPricePerLot * lotToProcess;
+            // === Kalkulasi bunga harian ===
+            double productPrice = currentProduct.getProductPrice();
+            double investmentAmount = productPrice * lotToProcess;
+            int nDays = (int) DateHelper.calculateDayDiff(trx.getCreatedDate(), LocalDate.now());
+
+            double monthlyRate = currentProduct.getProductRate(); // rate bulanan
+            double dailyRate = Math.pow(1 + monthlyRate, 1.0 / 30) - 1;
+            double multiplier = Math.pow(1 + dailyRate, nDays);
+            double estimatedReturn = investmentAmount * multiplier;
+            double sellPricePerLot = estimatedReturn / lotToProcess; // Untuk response info
+            double totalSellAmount = estimatedReturn;
 
             // Simpan riwayat penjualan
             TransactionHistory sellHistory = new TransactionHistory();
@@ -346,7 +351,6 @@ public class TransactionServiceImplementation implements TransactionService {
 
         return responses;
     }
-
 
     @Override
     public TransactionResponse sellByTrxNumber(String trxNumber, int lotToSell, String token) throws JsonProcessingException, AccessDeniedException {
