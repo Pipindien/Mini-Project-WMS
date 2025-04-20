@@ -1,26 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, FormEvent } from "react";
 import { login as loginRequest } from "../../services/auth/api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../contexts/authContext";
 import { UserData } from "../../services/auth/type";
 
 const Login: React.FC = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErrorMessage("");
 
     try {
       const response = await loginRequest({ username, password });
-
       const { token, ...userData } = response;
 
       login({
@@ -29,11 +28,7 @@ const Login: React.FC = () => {
       });
 
       const role = (userData as UserData).role;
-      if (role === "ADMIN") {
-        navigate("/dashboardAdmin");
-      } else {
-        navigate("/dashboard");
-      }
+      navigate(role === "ADMIN" ? "/dashboardAdmin" : "/dashboard");
     } catch (err: any) {
       const message =
         err?.response?.data?.message ||
@@ -45,91 +40,97 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-white">
-      {/* Left Panel - Form */}
-      <div className="w-full md:w-1/2 flex items-center justify-center px-6 py-12 bg-gradient-to-br from-indigo-900 to-purple-700">
-        <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-10">
-          <h2 className="text-4xl font-bold text-center text-indigo-700 mb-2">
-            WealthScape
-          </h2>
-          <p className="text-center text-sm text-gray-500 mb-8">
-            Welcome back! Log in to continue managing your wealth.
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-black text-white flex flex-col md:flex-row transition-all duration-500">
+      {/* Login Form Container */}
+      <div className="w-full md:w-1/4 flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-md bg-white/20 backdrop-blur-md rounded-md shadow-2xl p-8 animate-fade-in-up flex flex-col h-full">
+          <div className="flex-grow flex flex-col justify-center">
+            <h2 className="text-4xl font-bold text-center text-white drop-shadow-md mb-2 transition-transform duration-300 hover:scale-105 hover:brightness-110">
+              WealthScape
+            </h2>
+            <p className="text-center text-sm text-gray-300 mb-6 transition-transform duration-300 hover:scale-105 hover:brightness-110">
+              Welcome back! Log in to continue managing your wealth.
+            </p>
 
-          <form className="space-y-5" onSubmit={handleLogin}>
-            <div>
-              <label
-                htmlFor="username"
-                className="block text-sm font-medium text-gray-700 mb-1"
+            <form className="space-y-4" onSubmit={handleLogin}>
+              <div>
+                <label
+                  htmlFor="username"
+                  className="block text-sm font-medium text-gray-300 mb-1"
+                >
+                  Username
+                </label>
+                <input
+                  type="text"
+                  id="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-500 rounded-md bg-black/30 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 hover:scale-105"
+                  placeholder="Enter your username"
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-300 mb-1"
+                >
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-500 rounded-md bg-black/30 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 hover:scale-105"
+                  placeholder="Enter your password"
+                  required
+                />
+              </div>
+
+              {errorMessage && (
+                <p className="text-red-400 text-sm text-center">
+                  {errorMessage}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-purple-600 to-purple-600 hover:from-white hover:via-purple-600 hover:to-white text-white font-semibold py-2 rounded-md shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
               >
-                Username
-              </label>
-              <input
-                type="text"
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                placeholder="yourusername"
-                required
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                placeholder="********"
-                required
-              />
-            </div>
-
-            {errorMessage && (
-              <p className="text-red-500 text-sm text-center">{errorMessage}</p>
-            )}
-
-            <button
-              type="submit"
-              className="w-full bg-white text-indigo-600 py-2 rounded-lg border border-indigo-600 hover:bg-gradient-to-r from-indigo-600 to-purple-600 hover:text-white transition"
-              disabled={loading}
+                {loading ? "Logging in..." : "Login"}
+              </button>
+            </form>
+          </div>
+          <div className="text-center mt-6 text-sm text-gray-400">
+            Don’t have an account?{" "}
+            <Link
+              to="/register"
+              className="text-purple-400 hover:text-purple-200 underline transition-transform duration-300 hover:scale-105 hover:brightness-110"
             >
-              {loading ? "Logging in..." : "Login"}
-            </button>
-          </form>
-
-          <div className="text-center mt-6 text-sm text-gray-600">
-            Don't have an account yet?{" "}
-            <a href="/register" className="text-indigo-600 hover:underline">
               Register here
-            </a>
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* Right Panel - Splash image & intro */}
-      <div className="w-full md:w-1/2 relative hidden md:block">
+      {/* Image Container */}
+      <div className="w-full md:w-3/4 relative hidden md:block overflow-hidden">
         <img
           src="https://cdn.pixabay.com/photo/2020/04/11/08/06/money-5029288_1280.jpg"
           alt="Finance Illustration"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover scale-105 transform transition-transform duration-500"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-800 to-purple-700 opacity-50" />
-        <div className="absolute inset-0 flex flex-col justify-center px-12 text-white z-10">
-          <h2 className="text-4xl font-bold mb-4 leading-snug">
-            Secure Your Assets
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-800 to-purple-800 opacity-60" />
+        <div className="absolute inset-0 flex flex-col justify-center px-12 text-white z-10 animate-fade-in">
+          <h2 className="text-4xl font-extrabold mb-4 leading-snug drop-shadow-lg transition-transform duration-300 hover:scale-105 hover:brightness-110">
+            Secure Your Assets with WealthScape
             <br />
-            Make Smarter Decisions
+            Make Smarter Decisions now!
           </h2>
-          <p className="text-lg text-gray-200">
+          <p className="text-lg text-gray-200 transition-transform duration-300 hover:scale-105 hover:brightness-110">
             Sign in to access your personal wealth dashboard and insights.
           </p>
         </div>

@@ -12,66 +12,136 @@ const ProductDetail: React.FC = () => {
 
   const formatRate = (rate: number) => `${(rate * 100).toFixed(2)}%`;
 
-  if (loading)
+  if (loading) {
     return (
-      <div className="text-center mt-20 text-blue-500 font-semibold">
-        Loading...
+      <div className="flex justify-center items-center h-screen">
+        <div className="w-full max-w-2xl bg-white rounded-lg shadow-md p-6">
+          <div className="text-2xl text-gray-500 animate-pulse">Loading...</div>
+          <div className="mt-4 space-y-4">
+            <div className="h-64 bg-gray-300 rounded-md animate-pulse"></div>
+            <div className="space-y-2">
+              <div className="h-6 w-3/4 bg-gray-300 rounded-md animate-pulse"></div>
+              <div className="h-6 w-1/2 bg-gray-300 rounded-md animate-pulse"></div>
+              <div className="h-10 w-full bg-gray-300 rounded-md animate-pulse"></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
+  }
 
-  if (error)
+  if (error) {
     return (
       <div className="text-center mt-20 text-red-500 font-semibold">
         {error}
       </div>
     );
+  }
 
-  if (!product)
+  if (!product) {
     return (
       <div className="text-center mt-20 text-gray-500">Product not found.</div>
     );
+  }
 
   const handleBuy = () => {
     navigate(`/buy/${product.productId}`);
   };
 
+  const getParaphrasedDescription = (
+    description: string | undefined,
+    productName: string
+  ) => {
+    const briefDescription = `${productName} offers a blend of innovative features designed to enhance your investment strategy 📈. It provides the capability to optimize your portfolio 🚀 and potentially improve returns 💰. A perfect choice for investors looking for versatility and growth 😊.`;
+
+    if (description && description.length > 100) {
+      return description
+        .replace(/This product/gi, productName)
+        .replace(/this product/gi, productName)
+        .replace(/it is/gi, `${productName} is`)
+        .replace(/it has/gi, `${productName} has`)
+        .replace(/its/gi, `${productName}'s`)
+        .replace(/the product/gi, productName)
+        .replace(/a product/gi, productName)
+        .replace(/product/gi, productName);
+    }
+
+    return briefDescription;
+  };
+
+  const paraphrasedDescription = getParaphrasedDescription(
+    product.description,
+    product.productName
+  );
+
   return (
-    <div className="container mx-auto px-4 py-10">
-      <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden md:flex">
-        {/* Uncomment if you add imageUrl support
-        <img
-          className="h-64 w-full object-cover md:w-1/3"
-          alt={product.productName}
-          src={product.imageUrl || "/placeholder.png"}
-        />
-        */}
+    <div className="bg-gradient-to-br from-gray-50 to-gray-200 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-lg shadow-xl overflow-hidden">
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="bg-gray-100 flex items-center justify-center p-4">
+              <img
+                src={
+                  product.imageUrl ||
+                  "https://www.pngkey.com/png/full/52-526880_stock-transparent.png"
+                }
+                alt={product.productName}
+                className="object-contain h-full w-full rounded-lg"
+                style={{ maxHeight: "400px" }}
+              />
+            </div>
 
-        <div className="p-8 md:w-full">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            {product.productName}
-          </h1>
+            <div className="p-6 flex flex-col justify-between">
+              <div>
+                <h1
+                  className="text-3xl font-bold text-gray-900 mb-4"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(to right, #6366f1, #8b5cf6)",
+                    color: "transparent",
+                    backgroundClip: "text",
+                  }}
+                >
+                  {product.productName}
+                </h1>
 
-          <p className="text-xl text-green-600 font-semibold mb-4">
-            {formatCurrency(product.productPrice)}
-          </p>
+                <p className="text-2xl font-semibold text-indigo-600 mb-4">
+                  {formatCurrency(product.productPrice)}
+                </p>
 
-          <p className="text-sm text-indigo-600 font-medium mb-2">
-            Rate: {formatRate(product.productRate)} /bulan
-          </p>
+                <div className="flex items-center mb-3">
+                  <span className="text-gray-700 mr-2">Rate:</span>
+                  <span
+                    className={
+                      product.productRate > 0.7
+                        ? "bg-green-100 text-green-800 border border-green-300 px-3 py-1 rounded-full font-medium"
+                        : "bg-yellow-100 text-yellow-800 border border-yellow-300 px-3 py-1 rounded-full font-medium"
+                    }
+                  >
+                    {formatRate(product.productRate)}
+                  </span>
+                </div>
 
-          <p className="text-sm text-gray-500 mb-6">
-            Category:{" "}
-            <span className="font-medium text-gray-700">
-              {product.productCategory}
-            </span>
-          </p>
+                <p className="text-sm text-gray-600 mb-2">
+                  Category:{" "}
+                  <span className="font-medium text-gray-800">
+                    {product.productCategory}
+                  </span>
+                </p>
 
-          <button
-            onClick={handleBuy}
-            className="px-6 py-2 bg-green-600 text-white rounded-full font-semibold hover:bg-green-700 transition"
-          >
-            Beli Sekarang
-          </button>
+                <p className="text-gray-700 leading-relaxed text-md mb-6">
+                  {paraphrasedDescription}
+                </p>
+              </div>
+
+              <button
+                onClick={handleBuy}
+                className="w-full bg-green-600 text-white py-2 px-6 rounded-lg font-semibold shadow hover:bg-green-700 transition-transform duration-300 hover:scale-105"
+              >
+                Beli Sekarang
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
