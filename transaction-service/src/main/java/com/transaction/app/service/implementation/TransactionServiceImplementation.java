@@ -300,7 +300,7 @@ public class TransactionServiceImplementation implements TransactionService {
             // Simpan riwayat penjualan
             TransactionHistory sellHistory = new TransactionHistory();
             sellHistory.setTransaction(trx);
-            sellHistory.setStatus("sold");
+            sellHistory.setStatus("SOLD");
             sellHistory.setCustId(custId);
             sellHistory.setProductId(trx.getProductId());
             sellHistory.setAmount(totalSellAmount);
@@ -314,7 +314,7 @@ public class TransactionServiceImplementation implements TransactionService {
             trx.setLot(availableLot - lotToProcess);
             trx.setUpdateDate(new Date());
             if (trx.getLot() == 0) {
-                trx.setStatus("sold");
+                trx.setStatus("SOLD");
             }
             transactionRepository.save(trx);
 
@@ -384,7 +384,7 @@ public class TransactionServiceImplementation implements TransactionService {
         // Simpan riwayat penjualan
         TransactionHistory sellHistory = new TransactionHistory();
         sellHistory.setTransaction(trx);
-        sellHistory.setStatus("sold");
+        sellHistory.setStatus("SOLD");
         sellHistory.setCustId(trx.getCustId());
         sellHistory.setProductId(trx.getProductId());
         sellHistory.setAmount(totalSellAmount);
@@ -397,7 +397,7 @@ public class TransactionServiceImplementation implements TransactionService {
         // Update transaksi
         trx.setLot(trx.getLot() - lotToSell);
         if (trx.getLot() == 0) {
-            trx.setStatus("sold");
+            trx.setStatus("SOLD");
         }
         trx.setUpdateDate(new Date());
         transactionRepository.save(trx);
