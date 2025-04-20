@@ -75,7 +75,7 @@ const ProductForm: React.FC = () => {
       } else {
         await createProduct(form);
       }
-      navigate("/admin");
+      navigate("/dashboardAdmin");
     } catch {
       setError("Failed to save product");
     } finally {
@@ -84,59 +84,83 @@ const ProductForm: React.FC = () => {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-white rounded shadow mt-10">
-      <h2 className="text-2xl font-bold mb-4">
-        {isEdit ? "Edit" : "Create"} Product
+    <div className="max-w-2xl mx-auto mt-12 p-8 bg-white rounded-2xl shadow-lg">
+      <h2 className="text-3xl font-semibold text-gray-800 mb-6">
+        {isEdit ? "Edit Product" : "Create New Product"}
       </h2>
-      {error && <p className="text-red-500 mb-2">{error}</p>}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="text"
-          name="productName"
-          placeholder="Product Name"
-          value={form.productName}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-          required
-        />
-        <input
-          type="number"
-          name="productPrice"
-          placeholder="Price"
-          value={form.productPrice}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-          required
-        />
-        <input
-          type="number"
-          name="productRate"
-          placeholder="Rate"
-          value={form.productRate}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-          required
-        />
-        <select
-          name="categoryId"
-          value={form.categoryId?.toString() ?? ""}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-          required
-        >
-          <option value="">-- Select Category --</option>
-          {categories.map((cat) => (
-            <option key={cat.categoryId} value={cat.categoryId}>
-              {cat.categoryType}
-            </option>
-          ))}
-        </select>
+      {error && <p className="text-red-600 mb-4">{error}</p>}
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Product Name
+          </label>
+          <input
+            type="text"
+            name="productName"
+            placeholder="e.g. Kopi Gula Aren"
+            value={form.productName}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Price (Rp)
+          </label>
+          <input
+            type="number"
+            name="productPrice"
+            placeholder="e.g. 15000"
+            value={form.productPrice}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Rate Product
+          </label>
+          <input
+            type="number"
+            name="productRate"
+            step="0.1"
+            value={form.productRate}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Category
+          </label>
+          <select
+            name="categoryId"
+            value={form.categoryId?.toString() ?? ""}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          >
+            <option value="">-- Select Category --</option>
+            {categories.map((cat) => (
+              <option key={cat.categoryId} value={cat.categoryId}>
+                {cat.categoryType}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200"
           disabled={loading}
         >
-          {loading ? "Saving..." : isEdit ? "Update" : "Create"}
+          {loading ? "Saving..." : isEdit ? "Update Product" : "Create Product"}
         </button>
       </form>
     </div>

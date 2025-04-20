@@ -42,52 +42,62 @@ const BuyTransaction: React.FC = () => {
     try {
       const response = await buyTransaction(request, token);
       const trxNumber = response.trxNumber;
-
-      // ✅ Redirect ke halaman pembayaran
       navigate(`/payment/${trxNumber}`);
     } catch (err) {
       setSubmitError("Gagal melakukan transaksi.");
     }
   };
 
-  if (loading) return <div className="text-center mt-20">Loading...</div>;
+  if (loading)
+    return <div className="text-center mt-20 text-blue-600">Loading...</div>;
   if (error)
     return <div className="text-center mt-20 text-red-600">{error}</div>;
   if (!product)
-    return <div className="text-center mt-20">Product not found.</div>;
+    return (
+      <div className="text-center mt-20 text-gray-500">Product not found.</div>
+    );
 
   return (
-    <div className="max-w-xl mx-auto mt-10 p-6 bg-white rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold mb-4">Beli {product.productName}</h2>
+    <div className="max-w-2xl mx-auto mt-12 px-6 py-8 bg-white rounded-2xl shadow-lg">
+      <h2 className="text-3xl font-bold text-gray-800 mb-6">
+        Beli Produk: {product.productName}
+      </h2>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block font-semibold">Harga per unit:</label>
-          <p className="text-gray-700">
-            Rp {product.productPrice.toLocaleString()}
+          <label className="block text-sm font-semibold text-gray-700 mb-1">
+            Harga per Unit
+          </label>
+          <p className="text-lg text-green-700 font-medium">
+            Rp {product.productPrice.toLocaleString("id-ID")}
           </p>
         </div>
 
         <div>
-          <label className="block font-semibold">Jumlah Dana (Rp):</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">
+            Jumlah Dana Investasi (Rp)
+          </label>
           <input
             type="number"
-            className="w-full border border-gray-300 p-2 rounded"
+            className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={amount}
             onChange={(e) => setAmount(Number(e.target.value))}
             required
+            placeholder="Masukkan nominal dana"
           />
         </div>
 
         <div>
-          <label className="block font-semibold">Tujuan Keuangan:</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">
+            Tujuan Keuangan
+          </label>
           {goalsLoading ? (
-            <p className="text-gray-500">Loading goals...</p>
+            <p className="text-sm text-gray-500">Memuat tujuan keuangan...</p>
           ) : goalsError ? (
-            <p className="text-red-600">{goalsError}</p>
+            <p className="text-sm text-red-500">{goalsError}</p>
           ) : (
             <select
-              className="w-full border border-gray-300 p-2 rounded"
+              className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={goalName}
               onChange={(e) => setGoalName(e.target.value)}
               required
@@ -102,9 +112,11 @@ const BuyTransaction: React.FC = () => {
         </div>
 
         <div>
-          <label className="block font-semibold">Catatan:</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">
+            Catatan Transaksi
+          </label>
           <textarea
-            className="w-full border border-gray-300 p-2 rounded"
+            className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
@@ -113,7 +125,7 @@ const BuyTransaction: React.FC = () => {
 
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
         >
           Beli Sekarang
         </button>

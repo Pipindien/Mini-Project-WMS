@@ -19,3 +19,8 @@ export interface BuyTransactionResponse {
   notes: string;
   createdDate: string;
 }
+
+export interface SellTransactionRequest {
+  productName: string;
+  lot: number;
+}

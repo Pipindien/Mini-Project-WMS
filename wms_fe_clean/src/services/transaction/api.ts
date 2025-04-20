@@ -1,6 +1,7 @@
 import axios from "axios";
 import transactionApi from "../api/transaction";
 import { BuyTransactionRequest, BuyTransactionResponse } from "./type";
+import { SellTransactionRequest } from "../../pages/transaction/sellTransaction";
 
 export const buyTransaction = async (
   data: BuyTransactionRequest,
@@ -79,6 +80,24 @@ export const getMyTransactions = async (
       },
       params: {
         status, // ⬅ query param ?status=...
+      },
+    }
+  );
+  return response.data;
+};
+
+export const sellProduct = async (
+  data: SellTransactionRequest,
+  token: string
+) => {
+  console.log("Mengirim sell request dengan token:", token); // tambahkan ini
+
+  const response = await axios.post(
+    `${import.meta.env.VITE_TRANSACTION_API}/transaction/sell`,
+    data,
+    {
+      headers: {
+        token, // pastikan di sini huruf kecil persis
       },
     }
   );

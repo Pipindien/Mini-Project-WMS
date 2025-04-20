@@ -1,25 +1,44 @@
 import React from "react";
 import { Product } from "../../../services/product/type";
 
-// Define CardProduct component to accept Product as prop
 interface CardProductProps {
   product: Product;
 }
 
 const CardProduct: React.FC<CardProductProps> = ({ product }) => {
+  const formatCurrency = (value: number) =>
+    value.toLocaleString("id-ID", { style: "currency", currency: "IDR" });
+
+  const formatRate = (rate: number) => `${(rate * 100).toFixed(2)}%`;
+
   return (
-    <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-transform transform hover:scale-105">
-      <h2 className="text-xl font-bold text-gray-800 mb-4">
+    <div className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
+      <h2 className="text-2xl font-semibold text-gray-800 mb-2">
         {product.productName}
       </h2>
-      <p className="text-lg text-green-600 mb-4">${product.productPrice}</p>
-      <p className="text-sm text-yellow-500 mb-2">
-        Rate: {product.productRate} /bulan
+
+      <p className="text-xl text-green-600 font-bold mb-1">
+        {formatCurrency(product.productPrice)}
       </p>
-      <p className="text-sm text-gray-600 mb-2">
-        Product Category: {product.productCategory}
+
+      <p className="text-sm text-indigo-600 mb-2">
+        Rate:{" "}
+        <span className="font-medium">{formatRate(product.productRate)}</span>{" "}
+        /bulan
       </p>
-      <p className="text-sm text-gray-500">Created: {product.createdDate}</p>
+
+      <span className="inline-block px-3 py-1 text-xs font-semibold text-yellow-800 bg-yellow-100 rounded-full mb-3">
+        {product.productCategory}
+      </span>
+
+      <p className="text-xs text-gray-500">
+        Created on:{" "}
+        {new Date(product.createdDate).toLocaleDateString("id-ID", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })}
+      </p>
     </div>
   );
 };

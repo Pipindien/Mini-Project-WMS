@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   getTransaction,
   updateTransaction,
@@ -8,6 +8,8 @@ import { BuyTransactionResponse } from "../../services/transaction/type";
 
 const PaymentPage: React.FC = () => {
   const { trxNumber } = useParams();
+  const navigate = useNavigate();
+
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -49,6 +51,17 @@ const PaymentPage: React.FC = () => {
     if (trxNumber) fetchPaymentStatus();
   }, [trxNumber]);
 
+  // Auto-redirect jika status SUCCESS
+  useEffect(() => {
+    if (status === "SUCCESS") {
+      const timer = setTimeout(() => {
+        navigate("/dashboard");
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [status, navigate]);
+
   const handleBayar = async () => {
     const token = localStorage.getItem("token");
 
@@ -65,9 +78,7 @@ const PaymentPage: React.FC = () => {
         throw new Error("Respons update transaksi tidak valid.");
       }
 
-      // Setelah berhasil, fetch ulang status transaksi
-      await fetchPaymentStatus();
-
+      await fetchPaymentStatus(); // Refresh status
       setError(null);
     } catch (err: any) {
       console.error("Gagal melakukan update transaksi:", err);
@@ -77,66 +88,93 @@ const PaymentPage: React.FC = () => {
     }
   };
 
+  const renderStatusColor = (status: string) => {
+    switch (status) {
+      case "SUCCESS":
+        return "text-green-600";
+      case "IN PROGRESS":
+        return "text-yellow-500";
+      case "FAILED":
+        return "text-red-600";
+      default:
+        return "text-gray-600";
+    }
+  };
+
   return (
-    <div className="max-w-xl mx-auto mt-10 p-6 bg-white rounded-xl shadow-md text-center">
-      <h2 className="text-2xl font-bold mb-4">Status Pembayaran</h2>
+    <div className="max-w-xl mx-auto mt-12 p-8 bg-white rounded-2xl shadow-xl">
+      <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+        Status Pembayaran
+      </h2>
 
       {loading ? (
-        <p>Memuat data transaksi...</p>
+        <p className="text-center text-blue-500">Memuat data transaksi...</p>
       ) : error ? (
-        <p className="text-red-600">{error}</p>
+        <p className="text-center text-red-600">{error}</p>
       ) : (
         <>
           {status && (
-            <div className="text-lg font-semibold">
-              Status Transaksi:{" "}
-              <span
-                className={
-                  status === "SUCCESS"
-                    ? "text-green-600"
-                    : status === "IN PROGRESS"
-                    ? "text-yellow-500"
-                    : "text-red-600"
-                }
-              >
+            <div className="text-center mb-4">
+              <span className="text-gray-700 font-medium">
+                Status Transaksi:
+              </span>{" "}
+              <span className={`font-bold ${renderStatusColor(status)}`}>
                 {status}
               </span>
             </div>
           )}
 
           {responseData && (
-            <div className="mt-4 text-left">
-              <p>
-                <strong>Produk:</strong> {responseData.productName}
-              </p>
-              <p>
-                <strong>Nominal:</strong> Rp{" "}
-                {responseData.amount != null
-                  ? responseData.amount.toLocaleString()
-                  : "-"}
-              </p>
-              <p>
-                <strong>Harga per Unit:</strong> Rp{" "}
-                {responseData.productPrice != null
-                  ? responseData.productPrice.toLocaleString()
-                  : "-"}
-              </p>
-              <p>
-                <strong>Lot:</strong> {responseData.lot}
-              </p>
-              <p>
-                <strong>Financial Goal:</strong> {responseData.goalName}
-              </p>
+            <div className="bg-gray-50 rounded-lg p-6 space-y-3 text-sm text-gray-700">
+              <div className="flex justify-between">
+                <span className="font-medium">Produk:</span>
+                <span>{responseData.productName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Nominal Investasi:</span>
+                <span>
+                  Rp {responseData.amount?.toLocaleString("id-ID") || "-"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Harga per Unit:</span>
+                <span>
+                  Rp {responseData.productPrice?.toLocaleString("id-ID") || "-"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Jumlah Lot Diperoleh:</span>
+                <span>{responseData.lot}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Goal Keuangan:</span>
+                <span>{responseData.goalName}</span>
+              </div>
             </div>
           )}
 
-          <button
-            className="mt-6 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition disabled:opacity-50"
-            onClick={handleBayar}
-            disabled={processing || status === "SUCCESS"}
-          >
-            {processing ? "Memproses..." : "Bayar"}
-          </button>
+          {status === "SUCCESS" ? (
+            <div className="mt-6 text-center">
+              <p className="text-green-600 font-semibold">
+                Pembayaran berhasil! Anda akan diarahkan ke dashboard dalam
+                beberapa detik...
+              </p>
+              <button
+                onClick={() => navigate("/dashboard")}
+                className="mt-4 bg-gray-200 text-gray-800 py-2 px-4 rounded hover:bg-gray-300 transition"
+              >
+                Kembali ke Dashboard Sekarang
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleBayar}
+              disabled={processing || status === "SUCCESS"}
+              className="mt-6 w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+            >
+              {processing ? "Memproses..." : "Bayar Sekarang"}
+            </button>
+          )}
         </>
       )}
     </div>
