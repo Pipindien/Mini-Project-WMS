@@ -216,41 +216,6 @@ public class TransactionServiceImplementation implements TransactionService {
 
         return response;
     }
-    @Override
-    public TransactionResponse updateTransactionStatusOnly(String trxNumber, String status, String token) throws JsonProcessingException {
-        Long custId = usersClient.getIdCustFromToken(token);
-
-        Transaction transaction = getTrxNumber(trxNumber);
-        if (transaction == null) {
-            throw new TrxNumberNotFoundException("Transaksi tidak ditemukan dengan nomor: " + trxNumber);
-        }
-
-        transaction.setStatus(status);
-        transaction.setUpdateDate(new Date());
-        Transaction savedTransaction = transactionRepository.save(transaction);
-
-        TransactionHistory history = new TransactionHistory();
-        history.setTransaction(transaction);
-        history.setStatus(status);
-        history.setCustId(transaction.getCustId());
-        history.setProductId(transaction.getProductId());
-        history.setAmount(transaction.getAmount());
-        history.setCreatedDate(new Date());
-        history.setNotes("Status updated via PaymentService");
-        history.setLot(transaction.getLot());
-        history.setGoalId(transaction.getGoalId());
-        transactionHistoryRepository.save(history);
-
-        return TransactionResponse.builder()
-                .status(savedTransaction.getStatus())
-                .amount(savedTransaction.getAmount())
-                .custId(savedTransaction.getCustId())
-                .productId(savedTransaction.getProductId())
-                .lot(savedTransaction.getLot())
-                .goalId(savedTransaction.getGoalId())
-                .notes("Status updated via PaymentService")
-                .build();
-    }
 
     @Override
     public List<TransactionResponse> sellByProductName(String productName, int lotToSell, Long goalId, String token) throws JsonProcessingException {
@@ -353,79 +318,6 @@ public class TransactionServiceImplementation implements TransactionService {
     }
 
     @Override
-    public TransactionResponse sellByTrxNumber(String trxNumber, int lotToSell, String token) throws JsonProcessingException, AccessDeniedException {
-        Long custId = usersClient.getIdCustFromToken(token);
-
-        Transaction trx = getTrxNumber(trxNumber);
-        if (trx == null) {
-            throw new TrxNumberNotFoundException("Transaksi tidak ditemukan dengan nomor: " + trxNumber);
-        }
-
-        if (!trx.getCustId().equals(custId)) {
-            throw new AccessDeniedException("Kamu tidak punya akses ke transaksi ini");
-        }
-
-        if (!"SUCCESS".equalsIgnoreCase(trx.getStatus()) || trx.getLot() <= 0) {
-            throw new IllegalArgumentException("Transaksi tidak valid untuk dijual");
-        }
-
-        if (lotToSell > trx.getLot()) {
-            throw new IllegalArgumentException("Jumlah lot yang ingin dijual melebihi lot yang tersedia");
-        }
-
-        // Ambil data produk berdasarkan productId dari transaction
-        ProductResponse product = productClient.getProductById(trx.getProductId());
-        if (product == null) {
-            throw new ProductNotFoundException("Produk tidak ditemukan untuk transaksi ini");
-        }
-
-        // === Hitung hasil penjualan ===
-        int nMonth = (int) DateHelper.calculateMonthDiff(trx.getCreatedDate(), LocalDate.now());
-        double rate = product.getProductRate(); // bulanan
-        double sellPricePerLot = product.getProductPrice() * Math.pow(1 + rate, nMonth); // gunakan harga dari client
-        double totalSellAmount = sellPricePerLot * lotToSell;
-
-        // Simpan riwayat penjualan
-        TransactionHistory sellHistory = new TransactionHistory();
-        sellHistory.setTransaction(trx);
-        sellHistory.setStatus("SOLD");
-        sellHistory.setCustId(trx.getCustId());
-        sellHistory.setProductId(trx.getProductId());
-        sellHistory.setAmount(totalSellAmount);
-        sellHistory.setCreatedDate(new Date());
-        sellHistory.setNotes("Sell via trxNumber");
-        sellHistory.setLot(lotToSell);
-        sellHistory.setGoalId(trx.getGoalId());
-        transactionHistoryRepository.save(sellHistory);
-
-        // Update transaksi
-        trx.setLot(trx.getLot() - lotToSell);
-        if (trx.getLot() == 0) {
-            trx.setStatus("SOLD");
-        }
-        trx.setUpdateDate(new Date());
-        transactionRepository.save(trx);
-
-        auditTrailsService.logsAuditTrails(
-                GeneralConstant.LOG_ACVITIY_SELL,
-                mapper.writeValueAsString("trxNumber: " + trxNumber + " - Lot: " + lotToSell),
-                mapper.writeValueAsString(sellHistory),
-                "Sell transaction by trx number"
-        );
-
-        return TransactionResponse.builder()
-                .status("SUCCESS")
-                .amount(totalSellAmount)
-                .custId(trx.getCustId())
-                .productId(trx.getProductId())
-                .productPrice(sellPricePerLot)
-                .lot(lotToSell)
-                .goalId(trx.getGoalId())
-                .notes("Sell via trxNumber")
-                .build();
-    }
-
-    @Override
     public List<TransactionList> getTransactionStatusAndCust(String status, String token) {
         Long custId = usersClient.getIdCustFromToken(token);
 
@@ -502,7 +394,6 @@ public class TransactionServiceImplementation implements TransactionService {
         return response;
     }
 
-
     @Override
     public List<TransactionResponse> getTransactionsByCustId(String token) throws JsonProcessingException {
         Long custId = usersClient.getIdCustFromToken(token);
@@ -543,40 +434,4 @@ public class TransactionServiceImplementation implements TransactionService {
         return responses;
     }
 
-    @Override
-    public List<TransactionResponse> getTransactionsByGoalName(String token, String goalName) throws JsonProcessingException {
-        Long custId = usersClient.getIdCustFromToken(token);
-
-        FinancialGoalResponse goalRequest = new FinancialGoalResponse();
-        goalRequest.setGoalName(goalName);
-
-        FinancialGoalResponse goalResponse = fingolClient.getFinansialGoalByName(goalRequest, token);
-        if (goalResponse == null) {
-            throw new GoalNotFoundException("Goal tidak ditemukan: " + goalName);
-        }
-
-        Long goalId = goalResponse.getGoalId();
-        List<Transaction> transactions = transactionRepository.findByCustIdAndGoalId(custId, goalId);
-
-        List<TransactionResponse> responses = new ArrayList<>();
-        for (Transaction trx : transactions) {
-            TransactionResponse response = TransactionResponse.builder()
-                    .status(trx.getStatus())
-                    .amount(trx.getAmount())
-                    .custId(trx.getCustId())
-                    .productId(trx.getProductId())
-                    .lot(trx.getLot())
-                    .goalId(trx.getGoalId())
-                    .build();
-            responses.add(response);
-        }
-
-        auditTrailsService.logsAuditTrails(
-                GeneralConstant.LOG_ACVITIY_GET_TRX_NUMBER,
-                mapper.writeValueAsString(custId),
-                mapper.writeValueAsString(responses),
-                "Insert Get My Transaction And Goal Name"
-        );
-        return responses;
-    }
 }

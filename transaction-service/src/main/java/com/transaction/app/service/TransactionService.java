@@ -15,11 +15,9 @@ public interface TransactionService {
 
     TransactionResponse updateTransaction(TransactionRequest request, String trxNumber, String token) throws JsonProcessingException;
 
-    TransactionResponse updateTransactionStatusOnly(String trxNumber, String status, String token) throws JsonProcessingException;
 
     List<TransactionResponse> sellByProductName(String productName, int lotToSell, Long goalId, String token) throws JsonProcessingException;
 
-    TransactionResponse sellByTrxNumber(String trxNumber, int lotToSell, String token) throws JsonProcessingException, AccessDeniedException;
 
     List<TransactionList> getTransactionStatusAndCust(String status, String token);
 
@@ -28,8 +26,6 @@ public interface TransactionService {
     TransactionResponse getTransactionNumber(String trxNumber,  String token) throws JsonProcessingException;
 
     List<TransactionResponse> getTransactionsByCustId(String token) throws JsonProcessingException;
-
-    List<TransactionResponse> getTransactionsByGoalName(String token, String goalName) throws JsonProcessingException;
 
 
 }

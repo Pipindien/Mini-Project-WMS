@@ -55,24 +55,6 @@ public class TransactionController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/update-status/{trxNumber}")
-    public ResponseEntity<String> updateTransactionStatusOnly(
-            @PathVariable String trxNumber,
-            @RequestBody Map<String, String> request,
-            @RequestHeader String token) throws JsonProcessingException {
-
-        String status = request.get("status");
-        TransactionResponse response = transactionService.updateTransactionStatusOnly(trxNumber, status, token);
-
-        // ✅ Update portfolio summary dan progress kalau status-nya SUCCESS
-        if ("SUCCESS".equalsIgnoreCase(status)) {
-            Long goalId = response.getGoalId();
-            portfolioSummaryService.upsertPortfolioSummary(goalId, token);
-            portfolioSummaryService.updateProgress(goalId, token);
-        }
-
-        return ResponseEntity.ok("Status transaction berhasil diupdate ke: " + status);
-    }
 
     @GetMapping("/{trxNumber}")
     public ResponseEntity<TransactionResponse> getTransactionNumber(
@@ -92,14 +74,6 @@ public class TransactionController {
     @GetMapping("/my")
     public ResponseEntity<List<TransactionResponse>> getMyTransactions(@RequestHeader String token) throws JsonProcessingException {
         List<TransactionResponse> response = transactionService.getTransactionsByCustId(token);
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/my/{goalName}")
-    public ResponseEntity<List<TransactionResponse>> getMyTransactionsByGoalName(
-            @RequestHeader String token,
-            @PathVariable String goalName) throws JsonProcessingException {
-        List<TransactionResponse> response = transactionService.getTransactionsByGoalName(token, goalName);
         return ResponseEntity.ok(response);
     }
 
@@ -142,20 +116,4 @@ public class TransactionController {
         return ResponseEntity.ok(responses);
     }
 
-
-    @PostMapping("/sell/{trxNumber}")
-    public ResponseEntity<TransactionResponse> sellByTrxNumber(
-            @PathVariable String trxNumber,
-            @RequestBody Map<String, Integer> request,
-            @RequestHeader String token
-    ) throws JsonProcessingException, AccessDeniedException {
-        Integer lotToSell = request.get("lotToSell");
-
-        TransactionResponse response = transactionService.sellByTrxNumber(trxNumber, lotToSell, token);
-        Long goalId = response.getGoalId();
-        portfolioSummaryService.upsertPortfolioSummary(goalId, token);
-        portfolioSummaryService.updateProgress(goalId, token);
-
-        return ResponseEntity.ok(response);
-    }
 }
