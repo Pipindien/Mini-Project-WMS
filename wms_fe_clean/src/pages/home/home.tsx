@@ -57,21 +57,25 @@ const Home: React.FC = () => {
             </h2>
             <div className="text-gray-700 space-y-1 mb-4">
               <p>
-                Total Investment:{" "}
-                <strong>Rp {dashboard.totalInvestment.toLocaleString()}</strong>
+                Total Investment: Rp{" "}
+                {(dashboard?.totalInvestment ?? 0).toLocaleString()}
               </p>
               <p>
                 Estimated Return:{" "}
-                <strong>Rp {dashboard.estimatedReturn.toLocaleString()}</strong>
+                <strong>
+                  Rp {(dashboard?.estimatedReturn ?? 0).toLocaleString()}
+                </strong>
               </p>
               <p>
                 Profit:{" "}
-                <strong>Rp {dashboard.totalProfit.toLocaleString()}</strong>
+                <strong>
+                  Rp {(dashboard?.totalProfit ?? 0).toLocaleString()}
+                </strong>
               </p>
               <p>
                 Return:{" "}
                 <strong>
-                  {(dashboard.returnPercentage * 100).toFixed(2)}%
+                  {(dashboard?.returnPercentage ?? 0).toFixed(2)}%
                 </strong>
               </p>
             </div>

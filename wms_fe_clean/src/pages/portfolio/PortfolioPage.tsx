@@ -77,7 +77,7 @@ const HomePortfolio: React.FC = () => {
                   Math.round((goal.currentAmount / goal.targetAmount) * 100)
                 );
 
-          const formattedDate = new Date(goal.updatedAt).toLocaleDateString(
+          const formattedDate = new Date(goal.updatedDate).toLocaleDateString(
             "id-ID",
             {
               day: "2-digit",

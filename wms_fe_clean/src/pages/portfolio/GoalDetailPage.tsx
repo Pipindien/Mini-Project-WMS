@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { getPortfolioByGoalId } from "../../services/goal/api";
 import {
-  PortfolioDashboard,
+  createSimulateGoal,
+  SimulateResponse,
+} from "../../services/simulate/api";
+import {
+  PortfolioDashboardResponse,
   PortfolioProductDetail,
 } from "../../services/goal/type";
 import {
@@ -12,16 +16,28 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
 } from "recharts";
 
 const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff7f50", "#00c49f"];
 
 const GoalDetailPage: React.FC = () => {
   const { goalId } = useParams();
-  const [portfolio, setPortfolio] = useState<PortfolioDashboard | null>(null);
+  const navigate = useNavigate();
+  const [portfolio, setPortfolio] = useState<PortfolioDashboardResponse | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const [monthlyInvestment, setMonthlyInvestment] = useState(500000);
+  const [simulation, setSimulation] = useState<any | null>(null);
+  const [simLoading, setSimLoading] = useState(false);
+  const [simError, setSimError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPortfolio = async () => {
@@ -40,6 +56,24 @@ const GoalDetailPage: React.FC = () => {
     fetchPortfolio();
   }, [goalId]);
 
+  const handleSimulate = async () => {
+    setSimLoading(true);
+    setSimError(null);
+    const token = localStorage.getItem("token") || "";
+    try {
+      const result = await createSimulateGoal(
+        { goalId: Number(goalId), monthlyInvestment },
+        token
+      );
+      setSimulation(result);
+    } catch (err) {
+      console.error("Simulate Error:", err);
+      setSimError("Gagal melakukan simulasi.");
+    } finally {
+      setSimLoading(false);
+    }
+  };
+
   const formatCurrency = (value: number) =>
     value?.toLocaleString("id-ID", { style: "currency", currency: "IDR" }) ??
     "Rp 0";
@@ -51,7 +85,6 @@ const GoalDetailPage: React.FC = () => {
       <div className="text-red-500 text-center">Portfolio data not found.</div>
     );
 
-  // 🧠 Grouping product detail berdasarkan kategori
   const categoryGroups: Record<string, PortfolioProductDetail[]> = {};
   portfolio.portfolioProductDetails.forEach((product) => {
     if (!categoryGroups[product.productCategory]) {
@@ -60,11 +93,20 @@ const GoalDetailPage: React.FC = () => {
     categoryGroups[product.productCategory].push(product);
   });
 
-  // Pie chart data dari total investment per kategori
   const pieData = Object.entries(categoryGroups).map(([category, products]) => {
     const total = products.reduce((sum, p) => sum + p.investmentAmount, 0);
     return { name: category, value: total };
   });
+
+  // Optional: generate dummy growth data
+  const growthData = simulation
+    ? Array.from({ length: simulation.monthsToAchieve }, (_, i) => ({
+        month: `Bulan ${i + 1}`,
+        value: Math.round(
+          monthlyInvestment * ((Math.pow(1 + 0.01, i + 1) - 1) / 0.01)
+        ),
+      }))
+    : [];
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">
@@ -74,10 +116,11 @@ const GoalDetailPage: React.FC = () => {
           Goal Overview
         </h2>
         <p className="text-xl font-bold text-gray-700">
-          Goal ID: {portfolio.goalId}
+          {portfolio.goalName} (ID: {portfolio.goalId})
         </p>
         <p className="text-sm text-gray-600 mt-2">
-          Risk Tolerance: (auto-assigned)
+          Risk Tolerance:{" "}
+          <span className="font-semibold">{portfolio.riskTolerance}</span>
         </p>
         <div className="mt-4 space-y-1 text-sm text-gray-600">
           <p>Total Investment: {formatCurrency(portfolio.totalInvestment)}</p>
@@ -157,9 +200,7 @@ const GoalDetailPage: React.FC = () => {
                     <button
                       onClick={() =>
                         navigate(`/sell/${product.productId}`, {
-                          state: {
-                            productDetail: product,
-                          },
+                          state: { productDetail: product },
                         })
                       }
                       className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
@@ -171,6 +212,44 @@ const GoalDetailPage: React.FC = () => {
               ))}
             </ul>
           </div>
+        )}
+      </div>
+
+      {/* Full width: Simulation */}
+      <div className="lg:col-span-2 bg-white p-6 shadow-lg rounded-xl">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+          Simulasi Investasi
+        </h2>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <input
+            type="number"
+            value={monthlyInvestment}
+            onChange={(e) => setMonthlyInvestment(Number(e.target.value))}
+            className="border p-2 rounded w-full sm:w-1/3"
+            placeholder="Investasi bulanan"
+          />
+          <button
+            onClick={handleSimulate}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+          >
+            Simulasikan
+          </button>
+        </div>
+
+        {simLoading && <p className="mt-4 text-gray-500">Memuat simulasi...</p>}
+        {simError && <p className="mt-4 text-red-500">{simError}</p>}
+        {simulation && (
+          <>
+            <div className="mt-6 bg-gray-100 p-4 rounded">
+              <p className="text-gray-700">{simulation.insightMessage}</p>
+              <p className="mt-2 text-sm text-gray-600">
+                Future Value: {formatCurrency(simulation.futureValue)}
+              </p>
+              <p className="text-sm text-gray-600">
+                Perkiraan tercapai dalam {simulation.monthsToAchieve} bulan
+              </p>
+            </div>
+          </>
         )}
       </div>
     </div>

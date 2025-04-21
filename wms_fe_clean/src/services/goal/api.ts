@@ -35,25 +35,15 @@ export const createGoal = async (
   token: string
 ): Promise<Goal> => {
   try {
-    // Send the POST request using your custom API wrapper (goalApi)
     const res = await goalApi.post("/financial-goal/save", payload, {
       headers: {
-        "Content-Type": "application/json", // Ensure content type is set
-        token: token, // Pass token in header
+        "Content-Type": "application/json",
+        token,
       },
     });
-
-    // Since Axios wraps the response in `res.data`, extract it directly
-    const data: Goal = res.data; // Access the response body directly
-
-    return data; // Return the goal data
-  } catch (err) {
-    // Handle errors from Axios
-    if (err instanceof axios.AxiosError) {
-      // Optional: log or re-throw custom error message based on status
-      console.error("Error creating goal:", err.response?.data || err.message);
-    }
-    throw new Error("Failed to create goal");
+    return res.data;
+  } catch {
+    throw new Error("Gagal membuat goal");
   }
 };
 
