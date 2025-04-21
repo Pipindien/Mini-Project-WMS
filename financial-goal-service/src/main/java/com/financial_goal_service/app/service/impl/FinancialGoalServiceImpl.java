@@ -40,6 +40,7 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
         UsersResponse userProfile = authClientService.getUserProfileFromToken(token);
         Long idCust = userProfile.getCustId();
 
+
         List<FinancialGoal> goals = financialGoalRepository.findByCustIdAndStatus(idCust, status);
 
         auditTrailsService.logsAuditTrails(
@@ -247,6 +248,7 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
             goal.setGoalName(financialGoalRequest.getGoalName());
             goal.setTargetAmount(financialGoalRequest.getTargetAmount());
             goal.setTargetDate(financialGoalRequest.getTargetDate());
+            goal.setRiskTolerance(financialGoalRequest.getRiskTolerance());
             goal.setUpdatedDate(new Date());
 
             FinancialGoal updatedGoal = financialGoalRepository.save(goal);
@@ -336,6 +338,7 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
 
         return products.stream()
                 .map(p -> RecommendedProduct.builder()
+                        .productId(p.getProductId())
                         .productName(p.getProductName())
                         .categoryId(p.getCategoryId())
                         .productRate(p.getProductRate())

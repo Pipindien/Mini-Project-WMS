@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 @Getter
 @AllArgsConstructor
 public enum RestApiError {
-    ACCOUNT_NOT_FOUND(HttpStatus.BAD_REQUEST.value(), "ERROR NOT FOUND"),
+    GOAL_NOT_FOUND(HttpStatus.BAD_REQUEST.value(), "ERROR NOT FOUND"),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR.value(), "INTERNAL SERVER ERROR"),
     BAD_REQUEST(HttpStatus.BAD_REQUEST.value(), "Invalid FinancialGoal Id Format" );
 

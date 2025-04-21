@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +28,7 @@ public interface FinancialGoalRepository extends JpaRepository<FinancialGoal, Lo
     );
 
     @Modifying
+    @Transactional
     @Query("UPDATE FinancialGoal fg SET fg.currentAmount = :amount WHERE fg.goalId = :goalId")
     void updateCurrentAmount(@Param("goalId") Long goalId, @Param("amount") Double amount);
 
