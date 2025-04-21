@@ -11,7 +11,6 @@ import java.util.Optional;
 
 @Repository
 public interface PortfolioSummaryRepository extends JpaRepository<PortfolioSummary, Long> {
-    Optional<PortfolioSummary> findByCustId(Long custId);
 
     @Query("SELECT ps FROM PortfolioSummary ps WHERE ps.goalId = :goalId")
     Optional<PortfolioSummary> findOneByGoalId(@Param("goalId") Long goalId);

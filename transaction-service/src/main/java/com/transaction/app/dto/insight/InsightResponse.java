@@ -12,5 +12,5 @@ public class InsightResponse {
     private String insightMessage;
     private Double futureValue;
     private Double monthlyInvestmentNeeded;
-    private Long monthsToAchieve;
+    private int monthsToAchieve;
 }

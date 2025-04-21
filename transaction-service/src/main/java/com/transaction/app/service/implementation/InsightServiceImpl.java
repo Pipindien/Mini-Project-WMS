@@ -1,7 +1,9 @@
 package com.transaction.app.service.implementation;
 
 import com.transaction.app.client.FingolClient;
+import com.transaction.app.client.ProductClient;
 import com.transaction.app.client.dto.FinancialGoalResponse;
+import com.transaction.app.client.dto.ProductResponse;
 import com.transaction.app.dto.insight.InsightResponse;
 import com.transaction.app.entity.PortfolioProductDetail;
 import com.transaction.app.entity.PortfolioSummary;
@@ -24,6 +26,9 @@ public class InsightServiceImpl implements InsightService {
     private FingolClient fingolClient;
 
     @Autowired
+    private ProductClient productClient;
+
+    @Autowired
     private PortfolioSummaryRepository portfolioSummaryRepository;
 
     @Override
@@ -43,7 +48,7 @@ public class InsightServiceImpl implements InsightService {
 
         double currentAmount = summary.getEstimatedReturn();
         List<PortfolioProductDetail> products = summary.getProductDetails();
-        double avgDailyRate = calculateAverageDailyRate(products);
+        double avgDailyRate = calculateAverageMonthlyRate(products);
 
         long monthsRemaining = ChronoUnit.MONTHS.between(LocalDate.now(), targetDate);
         double monthlyRate = avgDailyRate;
@@ -63,7 +68,7 @@ public class InsightServiceImpl implements InsightService {
 
         String message = generateMessage(currentAmount, targetAmount, futureValue, monthlyInvestment, targetDate, monthsToAchieve);
 
-        return new InsightResponse(goalId, message, futureValue, monthlyInvestment, monthsToAchieve);
+        return new InsightResponse(goalId, message, futureValue, monthlyInvestment, (int) monthsToAchieve);
     }
 
     public InsightResponse simulateGoalAchievement(Long goalId, double monthlyInvestment, String token) {
@@ -80,31 +85,74 @@ public class InsightServiceImpl implements InsightService {
 
         double currentAmount = summary.getEstimatedReturn(); // sudah termasuk profit
         List<PortfolioProductDetail> products = summary.getProductDetails();
-        double monthlyRate = calculateAverageDailyRate(products); // sudah dalam bentuk bulanan
+        double monthlyRate = calculateAverageMonthlyRate(products); // dalam bentuk bulanan
 
         double total = currentAmount;
         long months = 0;
 
+        // Loop untuk estimasi kapan target tercapai
         while (total < targetAmount && months < 1000) {
-            total = (total + monthlyInvestment) * (1 + monthlyRate);
+            total = total * (1 + monthlyRate);
+            total += monthlyInvestment;
             months++;
         }
+
+        // Estimasi saldo setelah 1 tahun
+        double totalOneYear = currentAmount;
+        for (int i = 0; i < 12; i++) {
+            totalOneYear = totalOneYear * (1 + monthlyRate);
+            totalOneYear += monthlyInvestment;
+        }
+
+        String additionalNote = String.format(
+                "📈 Dalam 1 tahun, estimasi saldo kamu bisa tumbuh jadi sekitar Rp%,.0f.", totalOneYear
+        );
 
         String message;
         if (total >= targetAmount) {
             message = String.format(
-                    "✅ Dengan investasi Rp%.0f per bulan, kamu bisa capai tujuanmu dalam %d bulan!",
-                    monthlyInvestment, months
+                    "✅ Dengan investasi Rp%.0f per bulan, kamu bisa capai tujuanmu dalam %d bulan! %s",
+                    monthlyInvestment, months, additionalNote
             );
         } else {
             message = "❌ Dengan investasi bulanan tersebut, kamu belum bisa capai target dalam waktu wajar.";
         }
 
-        return new InsightResponse(goalId, message, total, monthlyInvestment, months);
+        return new InsightResponse(goalId, message, 0.0, monthlyInvestment, (int) months);
     }
 
 
-    private double calculateAverageDailyRate(List<PortfolioProductDetail> productDetails) {
+    @Override
+    public InsightResponse simulateProductInvestment(Long productId, double monthlyInvestment, int years) {
+        if (years < 1 || years > 10) {
+            throw new IllegalArgumentException("Durasi harus antara 1 hingga 10 tahun");
+        }
+
+        ProductResponse product = productClient.getProductById(productId);
+        if (product == null) {
+            throw new RuntimeException("Produk tidak ditemukan dengan ID: " + productId);
+        }
+
+        double monthlyRate = product.getProductRate(); // Sudah asumsi rate bulanan
+        int months = years * 12;
+        double total = 0;
+
+        // Loop dengan bunga dihitung dulu, lalu ditambah investasi
+        for (int i = 0; i < months; i++) {
+            total = total * (1 + monthlyRate);
+            total += monthlyInvestment;
+        }
+
+        String message = String.format(
+                "💰 Jika kamu investasi Rp%.0f/bulan ke produk ini selama %d tahun, totalmu bisa tumbuh jadi sekitar Rp%.0f (termasuk return).",
+                monthlyInvestment, years, total
+        );
+
+        return new InsightResponse(null, message, total, monthlyInvestment, months);
+    }
+
+
+    private double calculateAverageMonthlyRate(List<PortfolioProductDetail> productDetails) {
         if (productDetails == null || productDetails.isEmpty()) {
             return 0;
         }

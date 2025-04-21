@@ -193,7 +193,7 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
 
             for (PortfolioProductDetail detail : summary.getProductDetails()) {
                 categoryDistribution.merge(
-                        detail.getProductCategory(),
+                        detail.getProductCategory(), // asumsi kamu pakai `String getProductCategory()`
                         detail.getInvestmentAmount() != null ? detail.getInvestmentAmount() : 0.0,
                         Double::sum
                 );

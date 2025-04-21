@@ -21,4 +21,5 @@ public class PortfolioProductDetailResponse {
     private Double estimatedReturn;
     private Double profit;
     private Date buyDate;
+    private Date lastUpdated;
 }

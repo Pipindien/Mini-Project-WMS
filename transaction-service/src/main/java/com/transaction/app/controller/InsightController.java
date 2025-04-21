@@ -1,6 +1,8 @@
 package com.transaction.app.controller;
 
 import com.transaction.app.dto.insight.InsightResponse;
+import com.transaction.app.dto.insight.SimulateInsightRequest;
+import com.transaction.app.dto.insight.SimulateProductRequest;
 import com.transaction.app.service.InsightService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,4 +21,22 @@ public class InsightController {
             InsightResponse insightResponse = insightService.generateInsight(goalId, token);
             return ResponseEntity.ok(insightResponse);
     }
+
+    @PostMapping("/simulate")
+    public ResponseEntity<InsightResponse> simulateGoal(@RequestBody SimulateInsightRequest request,
+                                                        @RequestHeader String token) {
+        InsightResponse result = insightService.simulateGoalAchievement(request.getGoalId(), request.getMonthlyInvestment(), token);
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/simulate-product")
+    public ResponseEntity<InsightResponse> simulateProduct(@RequestBody SimulateProductRequest request) {
+        InsightResponse result = insightService.simulateProductInvestment(
+                request.getProductId(),
+                request.getMonthlyInvestment(),
+                request.getYears()
+        );
+        return ResponseEntity.ok(result);
+    }
+
 }
