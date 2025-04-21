@@ -89,7 +89,7 @@ const Home: React.FC = () => {
                         key={category}
                         className="bg-blue-100 text-blue-800 px-4 py-2 rounded shadow-sm text-sm font-medium"
                       >
-                        {category}: {percentage.toFixed(2)}%
+                        {category}: {(Number(percentage) || 0).toFixed(2)}%
                       </div>
                     )
                   )}

@@ -32,7 +32,7 @@ const Login: React.FC = () => {
     } catch (err: any) {
       const message =
         err?.response?.data?.message ||
-        "Login gagal. Periksa username/password Anda.";
+        "Login failed! Please check and enter the correct username/password";
       setErrorMessage(message);
     } finally {
       setLoading(false);

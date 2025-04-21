@@ -15,6 +15,7 @@ import PortfolioRecommendation from "../pages/portfolio/PortfolioRecommendation"
 import GoalDetailPage from "../pages/portfolio/GoalDetailPage";
 import HomePortfolio from "../pages/portfolio/PortfolioPage";
 import PortfolioForm from "../pages/portfolio/PortfolioForm";
+import Information from "../pages/home/Information";
 
 export const router = createBrowserRouter([
   {
@@ -100,7 +101,6 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-
       {
         path: "/portfolio/:goalId/recommendation",
         element: (
@@ -109,7 +109,6 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-
       {
         path: "/portfolio/detail/:goalId",
         element: (
@@ -146,6 +145,10 @@ export const router = createBrowserRouter([
             ),
           },
         ],
+      },
+      {
+        path: "/information",
+        element: <Information />,
       },
     ],
   },

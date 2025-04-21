@@ -51,10 +51,10 @@ const RegisterPage: React.FC = () => {
     setLoading(true);
     try {
       await register(form);
-      setMessage("Register berhasil! Redirecting...");
+      setMessage("Register successful! Redirecting...");
       setTimeout(() => navigate("/"), 1500);
     } catch (error) {
-      setMessage("Gagal register.");
+      setMessage("Register failed, please enter the correct credentials");
       console.error(error);
     } finally {
       setLoading(false);

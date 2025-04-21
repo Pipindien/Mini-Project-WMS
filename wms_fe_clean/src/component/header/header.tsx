@@ -8,9 +8,14 @@ const Header: React.FC = () => {
   return (
     <header className="bg-gradient-to-r from-indigo-600 to-purple-600 shadow-md py-4 px-6">
       <div className="container mx-auto flex justify-between items-center">
-        <div className="text-white text-2xl font-bold tracking-wide">
+        {/* Logo as Link to /information */}
+        <Link
+          to="/information"
+          className="text-white text-2xl font-bold tracking-wide"
+        >
           WealthScape
-        </div>
+        </Link>
+
         <nav className="space-x-6 text-white text-sm font-medium">
           {role === "USER" && (
             <>
@@ -20,12 +25,12 @@ const Header: React.FC = () => {
               >
                 Dashboard
               </Link>
-              <a
-                href="/portfolio"
+              <Link
+                to="/portfolio"
                 className="hover:underline hover:text-gray-200 transition"
               >
                 Portfolio
-              </a>
+              </Link>
               <Link
                 to="/history"
                 className="hover:underline hover:text-gray-200 transition"
