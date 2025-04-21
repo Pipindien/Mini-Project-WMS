@@ -12,6 +12,5 @@ public class ProductRequest {
     private Double productPrice;
     private Double productRate;
     private Long categoryId;
-    private String productCategory;
     private Date createdDate;
 }

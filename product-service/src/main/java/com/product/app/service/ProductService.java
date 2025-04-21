@@ -44,7 +44,6 @@ public class ProductService {
                     .productRate(productRequest.getProductRate())
                     .categoryId(category.getCategoryId())
                     .createdDate(new Date())
-                    .productCategory(category.getCategoryType()) // jika masih mau simpan categoryType
                     .isDeleted(false)
                     .build();
 
@@ -57,7 +56,6 @@ public class ProductService {
                     .productRate(savedProduct.getProductRate())
                     .categoryId(savedProduct.getCategoryId())
                     .createdDate(savedProduct.getCreatedDate())
-                    .productCategory(savedProduct.getProductCategory())
                     .build();
 
             auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_SAVE,
@@ -75,7 +73,6 @@ public class ProductService {
         }
     }
 
-
     public ProductResponse getProductByProductName(String productName) throws JsonProcessingException {
         try {
             Optional<Product> product = productRepository.findProductByProductName(productName);
@@ -84,6 +81,9 @@ public class ProductService {
                 throw new ProductNotFoundException("Product Not Found");
             }
 
+            Category category = categoryRepository.findById(product.get().getCategoryId())
+                    .orElseThrow(() -> new CategoryNotFoundException("Category Not Found"));
+
             ProductResponse productResponse = ProductResponse.builder()
                     .productId(product.get().getProductId())
                     .productName(product.get().getProductName())
@@ -91,7 +91,7 @@ public class ProductService {
                     .productRate(product.get().getProductRate())
                     .categoryId(product.get().getCategoryId())
                     .createdDate(product.get().getCreatedDate())
-                    .productCategory(product.get().getProductCategory())
+                    .productCategory(category.getCategoryType())
                     .build();
 
             auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_GET_PRODUCT_NAME,
@@ -99,7 +99,7 @@ public class ProductService {
                     "Get Product Name Success");
 
             return productResponse;
-        } catch (ProductNotFoundException ex) {
+        } catch (ProductNotFoundException | CategoryNotFoundException ex) {
             auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_GET_PRODUCT_NAME,
                     mapper.writeValueAsString(productName), mapper.writeValueAsString(ex.getMessage()),
                     "Failed Get Product Name");
@@ -123,6 +123,9 @@ public class ProductService {
 
         List<ProductResponse> productResponses = new ArrayList<>();
         for (Product product : products) {
+            Category category = categoryRepository.findById(product.getCategoryId())
+                    .orElseThrow(() -> new CategoryNotFoundException("Category Not Found"));
+
             ProductResponse response = ProductResponse.builder()
                     .productId(product.getProductId())
                     .productName(product.getProductName())
@@ -130,7 +133,7 @@ public class ProductService {
                     .productRate(product.getProductRate())
                     .categoryId(product.getCategoryId())
                     .createdDate(product.getCreatedDate())
-                    .productCategory(product.getProductCategory())
+                    .productCategory(category.getCategoryType())
                     .build();
             productResponses.add(response);
         }
@@ -160,14 +163,12 @@ public class ProductService {
                     .productRate(existingProduct.getProductRate())
                     .categoryId(existingProduct.getCategoryId())
                     .createdDate(existingProduct.getCreatedDate())
-                    .productCategory(existingProduct.getProductCategory())
                     .build();
 
             existingProduct.setProductName(productRequest.getProductName());
             existingProduct.setProductPrice(productRequest.getProductPrice());
             existingProduct.setProductRate(productRequest.getProductRate());
             existingProduct.setCategoryId(category.getCategoryId());
-            existingProduct.setProductCategory(category.getCategoryType()); // Sesuai dengan save
             existingProduct.setIsDeleted(false);
 
             Product updatedProduct = productRepository.save(existingProduct);
@@ -179,7 +180,6 @@ public class ProductService {
                     .productRate(updatedProduct.getProductRate())
                     .categoryId(updatedProduct.getCategoryId())
                     .createdDate(updatedProduct.getCreatedDate())
-                    .productCategory(updatedProduct.getProductCategory())
                     .build();
 
             auditTrailsService.logsAuditTrails(
@@ -213,7 +213,6 @@ public class ProductService {
                     .productRate(product.getProductRate())
                     .categoryId(product.getCategoryId())
                     .createdDate(product.getCreatedDate())
-                    .productCategory(product.getProductCategory())
                     .build();
 
             product.setIsDeleted(true);
@@ -232,46 +231,22 @@ public class ProductService {
     }
 
     public List<ProductResponse> getProductsByCategoryId(Long categoryId) throws JsonProcessingException {
-            List<Product> products = productRepository.findProductsByCategoryId((categoryId));
-            if (products.isEmpty()) {
-                String message = "No Products Found";
-                auditTrailsService.logsAuditTrails(
-                        GeneralConstant.LOG_ACVITIY_GET_ALL_PRODUCT,
-                        mapper.writeValueAsString("Get Products by Category"),
-                        mapper.writeValueAsString(message),
-                        "Failed Get Products by Category"
-                );
-                throw new ProductNotFoundException(message);
-            }
-
-            List<ProductResponse> productResponses = new ArrayList<>();
-            for (Product product : products) {
-                ProductResponse response = ProductResponse.builder()
-                        .productId(product.getProductId())
-                        .productName(product.getProductName())
-                        .productPrice(product.getProductPrice())
-                        .productRate(product.getProductRate())
-                        .categoryId(product.getCategoryId())
-                        .createdDate(product.getCreatedDate())
-                        .productCategory(product.getProductCategory())
-                        .build();
-                productResponses.add(response);
-            }
-
+        List<Product> products = productRepository.findProductsByCategoryId((categoryId));
+        if (products.isEmpty()) {
+            String message = "No Products Found";
             auditTrailsService.logsAuditTrails(
                     GeneralConstant.LOG_ACVITIY_GET_ALL_PRODUCT,
                     mapper.writeValueAsString("Get Products by Category"),
-                    mapper.writeValueAsString(productResponses),
-                    "Get Products by Category Success"
+                    mapper.writeValueAsString(message),
+                    "Failed Get Products by Category"
             );
+            throw new ProductNotFoundException(message);
+        }
 
-            return productResponses;
-
-    }
-    public ProductResponse getProductById(Long productId) throws JsonProcessingException {
-        try {
-            Product product = productRepository.findProductByProductId(productId)
-                    .orElseThrow(() -> new ProductNotFoundException("Product Not Found"));
+        List<ProductResponse> productResponses = new ArrayList<>();
+        for (Product product : products) {
+            Category category = categoryRepository.findById(product.getCategoryId())
+                    .orElseThrow(() -> new CategoryNotFoundException("Category Not Found"));
 
             ProductResponse response = ProductResponse.builder()
                     .productId(product.getProductId())
@@ -280,7 +255,37 @@ public class ProductService {
                     .productRate(product.getProductRate())
                     .categoryId(product.getCategoryId())
                     .createdDate(product.getCreatedDate())
-                    .productCategory(product.getProductCategory())
+                    .productCategory(category.getCategoryType())
+                    .build();
+            productResponses.add(response);
+        }
+
+        auditTrailsService.logsAuditTrails(
+                GeneralConstant.LOG_ACVITIY_GET_ALL_PRODUCT,
+                mapper.writeValueAsString("Get Products by Category"),
+                mapper.writeValueAsString(productResponses),
+                "Get Products by Category Success"
+        );
+
+        return productResponses;
+    }
+
+    public ProductResponse getProductById(Long productId) throws JsonProcessingException {
+        try {
+            Product product = productRepository.findProductByProductId(productId)
+                    .orElseThrow(() -> new ProductNotFoundException("Product Not Found"));
+
+            Category category = categoryRepository.findById(product.getCategoryId())
+                    .orElseThrow(() -> new CategoryNotFoundException("Category Not Found"));
+
+            ProductResponse response = ProductResponse.builder()
+                    .productId(product.getProductId())
+                    .productName(product.getProductName())
+                    .productPrice(product.getProductPrice())
+                    .productRate(product.getProductRate())
+                    .categoryId(product.getCategoryId())
+                    .createdDate(product.getCreatedDate())
+                    .productCategory(category.getCategoryType())
                     .build();
 
             auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_GET_PRODUCT_ID,
@@ -288,7 +293,7 @@ public class ProductService {
                     "Get Product by Id Success");
 
             return response;
-        } catch (ProductNotFoundException ex) {
+        } catch (ProductNotFoundException | CategoryNotFoundException ex) {
             auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACVITIY_GET_PRODUCT_ID,
                     mapper.writeValueAsString(productId), mapper.writeValueAsString(ex.getMessage()),
                     "Failed Get Product by Id");
