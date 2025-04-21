@@ -1,5 +1,6 @@
 package com.transaction.app.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.transaction.app.dto.insight.InsightResponse;
 import com.transaction.app.dto.insight.SimulateInsightRequest;
 import com.transaction.app.dto.insight.SimulateProductRequest;
@@ -17,20 +18,20 @@ public class InsightController {
     private InsightService insightService;
 
     @GetMapping("/{goalId}")
-    public ResponseEntity<InsightResponse> getInsight(@PathVariable Long goalId, @RequestHeader String token) {
+    public ResponseEntity<InsightResponse> getInsight(@PathVariable Long goalId, @RequestHeader String token) throws JsonProcessingException {
             InsightResponse insightResponse = insightService.generateInsight(goalId, token);
             return ResponseEntity.ok(insightResponse);
     }
 
     @PostMapping("/simulate")
     public ResponseEntity<InsightResponse> simulateGoal(@RequestBody SimulateInsightRequest request,
-                                                        @RequestHeader String token) {
+                                                        @RequestHeader String token) throws JsonProcessingException {
         InsightResponse result = insightService.simulateGoalAchievement(request.getGoalId(), request.getMonthlyInvestment(), token);
         return ResponseEntity.ok(result);
     }
 
     @PostMapping("/simulate-product")
-    public ResponseEntity<InsightResponse> simulateProduct(@RequestBody SimulateProductRequest request) {
+    public ResponseEntity<InsightResponse> simulateProduct(@RequestBody SimulateProductRequest request) throws JsonProcessingException {
         InsightResponse result = insightService.simulateProductInvestment(
                 request.getProductId(),
                 request.getMonthlyInvestment(),
