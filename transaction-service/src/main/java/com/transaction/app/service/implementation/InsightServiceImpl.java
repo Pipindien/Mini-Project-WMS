@@ -1,13 +1,17 @@
 package com.transaction.app.service.implementation;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transaction.app.client.FingolClient;
 import com.transaction.app.client.ProductClient;
 import com.transaction.app.client.dto.FinancialGoalResponse;
 import com.transaction.app.client.dto.ProductResponse;
+import com.transaction.app.constant.GeneralConstant;
 import com.transaction.app.dto.insight.InsightResponse;
 import com.transaction.app.entity.PortfolioProductDetail;
 import com.transaction.app.entity.PortfolioSummary;
 import com.transaction.app.repository.PortfolioSummaryRepository;
+import com.transaction.app.service.AuditTrailsService;
 import com.transaction.app.service.InsightService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,8 +35,13 @@ public class InsightServiceImpl implements InsightService {
     @Autowired
     private PortfolioSummaryRepository portfolioSummaryRepository;
 
+    @Autowired
+    private AuditTrailsService auditTrailsService;
+
+    private final ObjectMapper mapper = new ObjectMapper();
+
     @Override
-    public InsightResponse generateInsight(Long goalId, String token) {
+    public InsightResponse generateInsight(Long goalId, String token) throws JsonProcessingException {
         FinancialGoalResponse financialGoalResponse = fingolClient.getFinancialGoalById(goalId, token);
 
         if (financialGoalResponse == null) {
@@ -68,10 +77,17 @@ public class InsightServiceImpl implements InsightService {
 
         String message = generateMessage(currentAmount, targetAmount, futureValue, monthlyInvestment, targetDate, monthsToAchieve);
 
+        auditTrailsService.logsAuditTrails(
+                GeneralConstant.LOG_ACTIVITY_GENERATE_INSIGHT_MESSAGE,
+                mapper.writeValueAsString(message),
+                mapper.writeValueAsString(message),
+                "Generate Product Simulation"
+        );
+
         return new InsightResponse(goalId, message, futureValue, monthlyInvestment, (int) monthsToAchieve);
     }
 
-    public InsightResponse simulateGoalAchievement(Long goalId, double monthlyInvestment, String token) {
+    public InsightResponse simulateGoalAchievement(Long goalId, double monthlyInvestment, String token) throws JsonProcessingException {
         FinancialGoalResponse financialGoalResponse = fingolClient.getFinancialGoalById(goalId, token);
 
         if (financialGoalResponse == null) {
@@ -118,12 +134,18 @@ public class InsightServiceImpl implements InsightService {
             message = "❌ Dengan investasi bulanan tersebut, kamu belum bisa capai target dalam waktu wajar.";
         }
 
+        auditTrailsService.logsAuditTrails(
+                GeneralConstant.LOG_ACTIVITY_GENERATE_GOAL_SIMULATION,
+                mapper.writeValueAsString(message),
+                mapper.writeValueAsString(message),
+                "Generate Product Simulation"
+        );
+
         return new InsightResponse(goalId, message, 0.0, monthlyInvestment, (int) months);
     }
 
-
     @Override
-    public InsightResponse simulateProductInvestment(Long productId, double monthlyInvestment, int years) {
+    public InsightResponse simulateProductInvestment(Long productId, double monthlyInvestment, int years) throws JsonProcessingException {
         if (years < 1 || years > 10) {
             throw new IllegalArgumentException("Durasi harus antara 1 hingga 10 tahun");
         }
@@ -146,6 +168,12 @@ public class InsightServiceImpl implements InsightService {
         String message = String.format(
                 "💰 Jika kamu investasi Rp%.0f/bulan ke produk ini selama %d tahun, totalmu bisa tumbuh jadi sekitar Rp%.0f (termasuk return).",
                 monthlyInvestment, years, total
+        );
+        auditTrailsService.logsAuditTrails(
+                GeneralConstant.LOG_ACTIVITY_GENERATE_PRODUCT_SIMULATION,
+                mapper.writeValueAsString(message),
+                mapper.writeValueAsString(message),
+                "Generate Product Simulation"
         );
 
         return new InsightResponse(null, message, total, monthlyInvestment, months);

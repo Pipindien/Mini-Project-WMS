@@ -1,5 +1,6 @@
 package com.transaction.app.service.implementation;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.transaction.app.client.FingolClient;
 import com.transaction.app.client.ProductClient;
 import com.transaction.app.client.dto.FinancialGoalResponse;
@@ -41,7 +42,7 @@ class InsightServiceImplTest {
     }
 
     @Test
-    void generateInsight() {
+    void generateInsight() throws JsonProcessingException {
         Long goalId = 1L;
         String token = "token";
         FinancialGoalResponse financialGoal = new FinancialGoalResponse();
@@ -68,7 +69,7 @@ class InsightServiceImplTest {
     }
 
     @Test
-    void simulateGoalAchievement() {
+    void simulateGoalAchievement() throws JsonProcessingException {
         Long goalId = 1L;
         double monthlyInvestment = 500_000.0;
         String token = "token";
@@ -95,7 +96,7 @@ class InsightServiceImplTest {
     }
 
     @Test
-    void simulateProductInvestment() {
+    void simulateProductInvestment() throws JsonProcessingException {
         Long productId = 1L;
         double monthlyInvestment = 1_000_000.0;
         int years = 3;

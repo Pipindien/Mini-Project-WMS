@@ -17,4 +17,7 @@ public class GeneralConstant {
     public static final String LOG_ACVITIY_DASHBOARD_DETAIL = "Get Dashboard Detail";
     public static final String LOG_ACVITIY_UPDATE_PROGRESS = "Update Progress in Financial Goal";
 
+    public static final String LOG_ACTIVITY_GENERATE_PRODUCT_SIMULATION = "Generate Product Simulation";
+    public static final String LOG_ACTIVITY_GENERATE_GOAL_SIMULATION = "Generate Goal Simulation";
+    public static final String LOG_ACTIVITY_GENERATE_INSIGHT_MESSAGE = "Generate Insight Message for Financial Goal";
 }
