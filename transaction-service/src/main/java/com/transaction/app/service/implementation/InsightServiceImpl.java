@@ -199,16 +199,11 @@ public class InsightServiceImpl implements InsightService {
     private String generateMessage(double currentAmount, double targetAmount, double futureValue, double monthlyInvestment, LocalDate targetDate, long monthsToAchieve) {
         double percentageSaved = currentAmount / targetAmount;
         long daysRemaining = ChronoUnit.DAYS.between(LocalDate.now(), targetDate);
-
-        if (currentAmount == 0) {
-            return "💡 Yuk mulai investasi pertamamu untuk capai tujuanmu!";
-        } else {
-            return String.format(
-                    "📊 Untuk capai tujuanmu, perlu investasi ~Rp%.0f per bulan. Dengan saldo sekarang, bisa tumbuh jadi Rp%.0f sampai %s.\n" +
-                    "Dengan saldo sekarang dan return saat ini, kamu bisa capai goal ini dalam sekitar %d bulan!",
-                    monthlyInvestment, futureValue, targetDate, monthsToAchieve
-            );
-        }
+        return String.format(
+                "📊 You’ll need about Rp%.0f/month to reach your goal by %s.\n" + "With your current balance, it could grow to Rp%.0f by %s.\n" +
+                        "At this pace, you might reach it in %d months!",
+                monthlyInvestment, targetDate, futureValue, targetDate, monthsToAchieve
+        );
     }
 
     private LocalDate convertToLocalDate(Date date) {
