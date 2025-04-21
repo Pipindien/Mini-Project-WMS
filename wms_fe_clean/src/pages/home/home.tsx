@@ -42,75 +42,75 @@ const Home: React.FC = () => {
   }
 
   return (
-    <>
-      <div className="container mx-auto p-4">
-        {dashboardLoading ? (
-          <div className="text-center text-xl mt-4">Loading dashboard...</div>
-        ) : dashboardError ? (
-          <div className="text-center text-xl text-red-500 mt-4">
-            {dashboardError}
-          </div>
-        ) : dashboard ? (
-          <div className="bg-white shadow p-6 rounded mb-10">
-            <h2 className="text-2xl font-bold mb-4 text-gray-800">
-              📊 Portfolio Summary
-            </h2>
-            <div className="text-gray-700 space-y-1 mb-4">
-              <p>
-                Total Investment:{" "}
-                <strong>Rp {dashboard.totalInvestment.toLocaleString()}</strong>
-              </p>
-              <p>
-                Estimated Return:{" "}
-                <strong>Rp {dashboard.estimatedReturn.toLocaleString()}</strong>
-              </p>
-              <p>
-                Profit:{" "}
-                <strong>Rp {dashboard.totalProfit.toLocaleString()}</strong>
-              </p>
-              <p>
-                Return:{" "}
-                <strong>
-                  {(dashboard.returnPercentage * 100).toFixed(2)}%
-                </strong>
-              </p>
-            </div>
-
-            {/* Category Allocation */}
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                📁 Category Allocation
-              </h3>
-              <div className="flex flex-wrap gap-4">
-                {dashboard.categoryAllocation &&
-                  Object.entries(dashboard.categoryAllocation).map(
-                    ([category, percentage]) => (
-                      <div
-                        key={category}
-                        className="bg-blue-100 text-blue-800 px-4 py-2 rounded shadow-sm text-sm font-medium"
-                      >
-                        {category}: {(Number(percentage) || 0).toFixed(2)}%
-                      </div>
-                    )
-                  )}
-              </div>
-            </div>
-          </div>
-        ) : null}
-
-        {/* Product List */}
-        <h1 className="text-3xl font-semibold text-center mb-8">
-          🛒 Product List
-        </h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <Link key={product.productId} to={`/product/${product.productId}`}>
-              <CardProduct product={product} />
-            </Link>
-          ))}
+    <div className="container mx-auto p-4">
+      {dashboardLoading ? (
+        <div className="text-center text-xl mt-4">Loading dashboard...</div>
+      ) : dashboardError ? (
+        <div className="text-center text-xl text-red-500 mt-4">
+          {dashboardError}
         </div>
+      ) : dashboard ? (
+        <div className="bg-white shadow p-6 rounded mb-10 animate__fadeInUp">
+          <h2 className="text-2xl font-bold mb-4 text-gray-800">
+            📊 Portfolio Summary
+          </h2>
+          <div className="text-gray-700 space-y-1 mb-4">
+            <p>
+              Total Investment:{" "}
+              <strong>Rp {dashboard.totalInvestment.toLocaleString()}</strong>
+            </p>
+            <p>
+              Estimated Return:{" "}
+              <strong>Rp {dashboard.estimatedReturn.toLocaleString()}</strong>
+            </p>
+            <p>
+              Profit:{" "}
+              <strong>Rp {dashboard.totalProfit.toLocaleString()}</strong>
+            </p>
+            <p>
+              Return:{" "}
+              <strong>{(dashboard.returnPercentage * 100).toFixed(2)}%</strong>
+            </p>
+          </div>
+
+          {/* Category Allocation */}
+          <div className="mt-6 animate__fadeInUp">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              📁 Category Allocation
+            </h3>
+            <div className="flex flex-wrap gap-4">
+              {dashboard.categoryAllocation &&
+                Object.entries(dashboard.categoryAllocation).map(
+                  ([category, percentage]) => (
+                    <div
+                      key={category}
+                      className="bg-blue-100 text-blue-800 px-4 py-2 rounded shadow-sm text-sm font-medium transition-all duration-300 transform hover:scale-105"
+                    >
+                      {category}: {(Number(percentage) || 0).toFixed(2)}%
+                    </div>
+                  )
+                )}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Product List */}
+      <h1 className="text-3xl font-semibold text-center mb-8 animate__fadeInUp">
+        🛒 Product List
+      </h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {products.map((product) => (
+          <Link
+            key={product.productId}
+            to={`/product/${product.productId}`}
+            className="transform transition-all duration-300 hover:scale-105"
+          >
+            <CardProduct product={product} />
+          </Link>
+        ))}
       </div>
-    </>
+    </div>
   );
 };
 

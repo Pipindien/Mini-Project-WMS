@@ -5,6 +5,7 @@ import {
   updateTransaction,
 } from "../../services/transaction/api";
 import { BuyTransactionResponse } from "../../services/transaction/type";
+import { Loader2, CheckCircle, XCircle, Clock } from "lucide-react";
 
 const PaymentPage: React.FC = () => {
   const { trxNumber } = useParams();
@@ -22,7 +23,7 @@ const PaymentPage: React.FC = () => {
     const token = localStorage.getItem("token");
 
     if (!token || !trxNumber) {
-      setError("Token atau nomor transaksi tidak ditemukan.");
+      setError("Token or transaction number not found");
       setLoading(false);
       return;
     }
@@ -31,16 +32,16 @@ const PaymentPage: React.FC = () => {
       const response = await getTransaction(trxNumber, token);
 
       if (!response || !response.status) {
-        throw new Error("Data transaksi tidak valid.");
+        throw new Error("Invalid transaction data");
       }
 
       setStatus(response.status);
       setResponseData(response);
       setError(null);
     } catch (err: any) {
-      console.error("Gagal mengambil transaksi:", err);
+      console.error("Failed to retrieve transaction:", err);
       setError(
-        err.message || "Terjadi kesalahan saat mengambil data transaksi."
+        err.message || "An error occurred while retrieving transaction data."
       );
     } finally {
       setLoading(false);
@@ -51,7 +52,6 @@ const PaymentPage: React.FC = () => {
     if (trxNumber) fetchPaymentStatus();
   }, [trxNumber]);
 
-  // Auto-redirect jika status SUCCESS
   useEffect(() => {
     if (status === "SUCCESS") {
       const timer = setTimeout(() => {
@@ -66,7 +66,7 @@ const PaymentPage: React.FC = () => {
     const token = localStorage.getItem("token");
 
     if (!token || !trxNumber || !responseData) {
-      setError("Data tidak lengkap untuk melakukan pembayaran.");
+      setError("Incomplete data could not make payment");
       return;
     }
 
@@ -75,20 +75,41 @@ const PaymentPage: React.FC = () => {
       const response = await updateTransaction(trxNumber, responseData, token);
 
       if (!response || !response.status) {
-        throw new Error("Respons update transaksi tidak valid.");
+        throw new Error("Invalid transaction update response");
       }
 
-      await fetchPaymentStatus(); // Refresh status
+      await fetchPaymentStatus();
       setError(null);
     } catch (err: any) {
-      console.error("Gagal melakukan update transaksi:", err);
-      setError(err.message || "Gagal memproses pembayaran.");
+      console.error("Failed to update transaction:", err);
+      setError(err.message || "Failed to process payment");
     } finally {
       setProcessing(false);
     }
   };
 
-  const renderStatusColor = (status: string) => {
+  const renderStatusIcon = (status: string) => {
+    switch (status) {
+      case "SUCCESS":
+        return (
+          <CheckCircle className="text-green-600 w-6 h-6 inline-block mr-1 animate-bounce" />
+        );
+      case "IN PROGRESS":
+        return (
+          <Clock className="text-yellow-500 w-6 h-6 inline-block mr-1 animate-pulse" />
+        );
+      case "FAILED":
+        return (
+          <XCircle className="text-red-600 w-6 h-6 inline-block mr-1 animate-shake" />
+        );
+      default:
+        return (
+          <Clock className="text-gray-500 w-6 h-6 inline-block mr-1 animate-spin" />
+        );
+    }
+  };
+
+  const renderStatusTextColor = (status: string) => {
     switch (status) {
       case "SUCCESS":
         return "text-green-600";
@@ -97,71 +118,75 @@ const PaymentPage: React.FC = () => {
       case "FAILED":
         return "text-red-600";
       default:
-        return "text-gray-600";
+        return "text-gray-500";
     }
   };
 
   return (
-    <div className="max-w-xl mx-auto mt-12 p-8 bg-white rounded-2xl shadow-xl">
-      <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
-        Status Pembayaran
+    <div className="max-w-2xl mx-auto mt-16 px-8 py-10 bg-white shadow-2xl rounded-3xl transition-all animate-fade-in">
+      <h2 className="text-4xl font-extrabold text-center text-gray-800 mb-8">
+        💸 Status Pembayaran
       </h2>
 
       {loading ? (
-        <p className="text-center text-blue-500">Memuat data transaksi...</p>
+        <div className="text-center text-blue-600 flex flex-col items-center">
+          <Loader2 className="w-6 h-6 animate-spin mb-2" />
+          <p>Memuat data transaksi...</p>
+        </div>
       ) : error ? (
-        <p className="text-center text-red-600">{error}</p>
+        <p className="text-center text-red-600 font-medium animate-fade-in">
+          {error}
+        </p>
       ) : (
         <>
           {status && (
-            <div className="text-center mb-4">
-              <span className="text-gray-700 font-medium">
-                Status Transaksi:
-              </span>{" "}
-              <span className={`font-bold ${renderStatusColor(status)}`}>
+            <div className="flex items-center justify-center mb-6 transition-all duration-300 scale-in">
+              {renderStatusIcon(status)}
+              <span
+                className={`text-lg font-semibold ${renderStatusTextColor(
+                  status
+                )}`}
+              >
                 {status}
               </span>
             </div>
           )}
 
           {responseData && (
-            <div className="bg-gray-50 rounded-lg p-6 space-y-3 text-sm text-gray-700">
-              <div className="flex justify-between">
-                <span className="font-medium">Produk:</span>
-                <span>{responseData.productName}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Nominal Investasi:</span>
-                <span>
-                  Rp {responseData.amount?.toLocaleString("id-ID") || "-"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Harga per Unit:</span>
-                <span>
-                  Rp {responseData.productPrice?.toLocaleString("id-ID") || "-"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Jumlah Lot Diperoleh:</span>
-                <span>{responseData.lot}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Goal Keuangan:</span>
-                <span>{responseData.goalName}</span>
-              </div>
+            <div className="bg-gray-50 rounded-xl p-6 space-y-4 shadow-inner border border-gray-100 animate-fade-in-up">
+              <DetailRow label="📦 Produk" value={responseData.productName} />
+              <DetailRow
+                label="💰 Investment Nominal"
+                value={`Rp ${
+                  responseData.amount?.toLocaleString("id-ID") || "-"
+                }`}
+              />
+              <DetailRow
+                label="💵 Price per Unit"
+                value={`Rp ${
+                  responseData.productPrice?.toLocaleString("id-ID") || "-"
+                }`}
+              />
+              <DetailRow
+                label="📊 Number of Lots Acquired"
+                value={responseData.lot}
+              />
+              <DetailRow
+                label="🎯 Financial Goals"
+                value={responseData.goalName}
+              />
             </div>
           )}
 
           {status === "SUCCESS" ? (
-            <div className="mt-6 text-center">
-              <p className="text-green-600 font-semibold">
-                Pembayaran berhasil! Anda akan diarahkan ke dashboard dalam
+            <div className="mt-8 text-center animate-fade-in">
+              <p className="text-green-600 font-semibold mb-4">
+                ✅ Pembayaran berhasil! Anda akan diarahkan ke dashboard dalam
                 beberapa detik...
               </p>
               <button
                 onClick={() => navigate("/dashboard")}
-                className="mt-4 bg-gray-200 text-gray-800 py-2 px-4 rounded hover:bg-gray-300 transition"
+                className="bg-gray-200 text-gray-800 font-medium py-2 px-5 rounded-xl hover:bg-gray-300 transition-transform transform hover:scale-105"
               >
                 Kembali ke Dashboard Sekarang
               </button>
@@ -170,9 +195,9 @@ const PaymentPage: React.FC = () => {
             <button
               onClick={handleBayar}
               disabled={processing || status === "SUCCESS"}
-              className="mt-6 w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+              className="mt-8 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all duration-300 disabled:opacity-50 hover:shadow-lg hover:scale-[1.02]"
             >
-              {processing ? "Memproses..." : "Bayar Sekarang"}
+              {processing ? "Processing..." : "💳 Purchase Now"}
             </button>
           )}
         </>
@@ -180,5 +205,15 @@ const PaymentPage: React.FC = () => {
     </div>
   );
 };
+
+const DetailRow: React.FC<{
+  label: string;
+  value?: string | number | null;
+}> = ({ label, value }) => (
+  <div className="flex justify-between text-gray-700 transition-all duration-300">
+    <span className="font-medium">{label}</span>
+    <span>{value ?? "-"}</span>
+  </div>
+);
 
 export default PaymentPage;

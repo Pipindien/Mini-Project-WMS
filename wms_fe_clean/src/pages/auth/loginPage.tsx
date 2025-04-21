@@ -32,7 +32,7 @@ const Login: React.FC = () => {
     } catch (err: any) {
       const message =
         err?.response?.data?.message ||
-        "Login failed! Please check and enter the correct usernamepassword";
+        "Login failed! Please check and enter the correct username/password";
       setErrorMessage(message);
     } finally {
       setLoading(false);
@@ -43,16 +43,25 @@ const Login: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-black text-white flex flex-col md:flex-row transition-all duration-500">
       {/* Login Form Container */}
       <div className="w-full md:w-1/4 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-md bg-white/20 backdrop-blur-md rounded-md shadow-2xl p-8 animate-fade-in-up flex flex-col h-full">
+        <div className="w-full max-w-md bg-white/20 backdrop-blur-md rounded-md shadow-2xl p-8 animate-fade-in-up animate-duration-[800ms] animate-ease-out flex flex-col h-full">
+          {/* animation of form container fade-in-up */}
+
           <div className="flex-grow flex flex-col justify-center">
-            <h2 className="text-4xl font-bold text-center text-white drop-shadow-md mb-2 transition-transform duration-300 hover:scale-105 hover:brightness-110">
+            <h2 className="text-4xl font-bold text-center text-white drop-shadow-md mb-2 transition-transform duration-300 hover:scale-105 hover:brightness-110 animate-fade-in-down animate-delay-100">
+              {/* animation of title fade-in-down */}
               WealthScape
             </h2>
-            <p className="text-center text-sm text-gray-300 mb-6 transition-transform duration-300 hover:scale-105 hover:brightness-110">
+            <p className="text-center text-sm text-gray-300 mb-6 transition-transform duration-300 hover:scale-105 hover:brightness-110 animate-fade-in-up animate-delay-200">
+              {/* animation of welcome paragraph fade-in-up */}
               Welcome back! Log in to continue managing your wealth.
             </p>
 
-            <form className="space-y-4" onSubmit={handleLogin}>
+            <form
+              className="space-y-4 animate-fade-in-up animate-delay-300"
+              onSubmit={handleLogin}
+            >
+              {/* animation of form fade-in-up */}
+
               <div>
                 <label
                   htmlFor="username"
@@ -90,7 +99,8 @@ const Login: React.FC = () => {
               </div>
 
               {errorMessage && (
-                <p className="text-red-400 text-sm text-center">
+                <p className="text-red-400 text-sm text-center animate-shake animate-duration-[600ms]">
+                  {/* animation of error message shake */}
                   {errorMessage}
                 </p>
               )}
@@ -98,12 +108,14 @@ const Login: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-purple-600 to-purple-600 hover:from-white hover:via-purple-600 hover:to-white text-white font-semibold py-2 rounded-md shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
+                className="w-full bg-gradient-to-r from-purple-600 to-purple-600 hover:from-white hover:via-purple-600 hover:to-white text-white font-semibold py-2 rounded-md shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 animate-fade-in-up animate-delay-500"
               >
+                {/* animation of submit button fade-in-up */}
                 {loading ? "Logging in..." : "Login"}
               </button>
             </form>
           </div>
+
           <div className="text-center mt-6 text-sm text-gray-400">
             Don’t have an account?{" "}
             <Link
@@ -124,7 +136,8 @@ const Login: React.FC = () => {
           className="w-full h-full object-cover scale-105 transform transition-transform duration-500"
         />
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-800 to-purple-800 opacity-60" />
-        <div className="absolute inset-0 flex flex-col justify-center px-12 text-white z-10 animate-fade-in">
+        <div className="absolute inset-0 flex flex-col justify-center px-12 text-white z-10 animate-fade-in animate-delay-500">
+          {/* animation of right side content fade-in */}
           <h2 className="text-4xl font-extrabold mb-4 leading-snug drop-shadow-lg transition-transform duration-300 hover:scale-105 hover:brightness-110">
             Secure Your Assets with WealthScape
             <br />
