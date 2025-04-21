@@ -64,7 +64,6 @@ class ProductServiceTest {
         mockProduct.setProductPrice(100.0);
         mockProduct.setProductRate(5.0);
         mockProduct.setCategoryId(1L);
-        mockProduct.setProductCategory("Fruit");
         mockProduct.setCreatedDate(new Date());
 
         lenient().when(categoryRepository.findById(anyLong())).thenReturn(Optional.of(mockCategory));
@@ -75,7 +74,6 @@ class ProductServiceTest {
                 .productPrice(100.0)
                 .productRate(5.0)
                 .categoryId(1L)
-                .productCategory("Fruit")
                 .build();
 
         // Act
@@ -134,7 +132,6 @@ class ProductServiceTest {
                 .productPrice(200.0)
                 .productRate(5.0)
                 .categoryId(1L)
-                .productCategory("Fruit")
                 .build();
         // Act
         ProductResponse result = productService.updateProduct(1L, productRequest);
