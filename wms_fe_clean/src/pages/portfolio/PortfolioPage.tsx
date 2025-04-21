@@ -38,6 +38,10 @@ const HomePortfolio: React.FC = () => {
     navigate(`/portfolio/edit/${goalId}`);
   };
 
+  const handleRecommendation = (goalId: string) => {
+    navigate(`/portfolio/recommendation/${goalId}`);
+  };
+
   const handleDelete = async (goalId: string) => {
     const token = localStorage.getItem("token");
     try {
@@ -88,14 +92,13 @@ const HomePortfolio: React.FC = () => {
                   Math.round((goal.currentAmount / goal.targetAmount) * 100)
                 );
 
-          const formattedDate = new Date(goal.updatedAt).toLocaleDateString(
-            "id-ID",
-            {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            }
-          );
+          const formattedDate = goal.targetDate
+            ? new Date(goal.targetDate).toLocaleDateString("id-ID", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })
+            : "Invalid Date"; // Fallback in case the date is invalid
 
           return (
             <div
@@ -116,7 +119,7 @@ const HomePortfolio: React.FC = () => {
                 </span>
               </p>
               <p className="text-xs sm:text-sm text-gray-500 mb-1 sm:mb-2">
-                Last Updated: {formattedDate}
+                Target Date: {formattedDate}
               </p>
 
               <div className="mb-2 sm:mb-3">
@@ -135,7 +138,7 @@ const HomePortfolio: React.FC = () => {
                 </p>
               </div>
 
-              <p className="text-xs sm:text-sm text-gray-700 mb-2 sm:mb-4 truncate">
+              <p className="text-xs sm:text-sm text-gray-700 mb-2 sm:mb-4">
                 {goal.insightMessage}
               </p>
 
@@ -144,7 +147,16 @@ const HomePortfolio: React.FC = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleEdit(goal.goalId);
+                    handleRecommendation(goal.goalId?.toString());
+                  }}
+                  className="px-3 py-1 sm:px-5 sm:py-2 text-xxs sm:text-sm font-medium text-green-600 bg-green-100 hover:bg-green-200 rounded-lg shadow-md transition duration-200 transform hover:scale-105"
+                >
+                  Recommendation
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit(goal.goalId?.toString());
                   }}
                   className="px-3 py-1 sm:px-5 sm:py-2 text-xxs sm:text-sm font-medium text-blue-600 bg-blue-100 hover:bg-blue-200 rounded-lg shadow-md transition duration-200 transform hover:scale-105"
                 >
@@ -153,7 +165,7 @@ const HomePortfolio: React.FC = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleShowModal(goal.goalId);
+                    handleShowModal(goal.goalId?.toString());
                   }}
                   className="px-3 py-1 sm:px-5 sm:py-2 text-xxs sm:text-sm font-medium text-red-600 bg-red-100 hover:bg-red-200 rounded-lg shadow-md transition duration-200 transform hover:scale-105"
                 >

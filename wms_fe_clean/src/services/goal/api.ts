@@ -43,8 +43,6 @@ export const createGoal = async (
         token: token, // Pass token in header
       },
     });
-
-    // Since Axios wraps the response in `res.data`, extract it directly
     const data: Goal = res.data; // Access the response body directly
 
     return data; // Return the goal data
@@ -74,8 +72,18 @@ export const getSuggestedPortfolio = async (
   return res.data;
 };
 
-// export const updateGoal = async (id: number, goal: Partial<Goal>) => {
-//   await goalApi.put(`/financial-goal/update/${id}`, goal);
+export const updateGoal = async (
+  goalId: string,
+  token: string,
+  goal: Partial<Goal>
+) => {
+  await goalApi.put(`/financial-goal/update/${goalId}`, goal, {
+    headers: {
+      token: token,
+    },
+  });
+};
+
 export const archiveGoal = async (goalId: string, token: string) => {
   await goalApi.patch(`/financial-goal/archive/${goalId}`, null, {
     headers: {

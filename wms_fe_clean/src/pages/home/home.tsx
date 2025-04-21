@@ -68,8 +68,7 @@ const Home: React.FC = () => {
               <strong>Rp {dashboard.totalProfit.toLocaleString()}</strong>
             </p>
             <p>
-              Return:{" "}
-              <strong>{(dashboard.returnPercentage * 100).toFixed(2)}%</strong>
+              Return: <strong>{dashboard.returnPercentage.toFixed(2)}%</strong>
             </p>
           </div>
 

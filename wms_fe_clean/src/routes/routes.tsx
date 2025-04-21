@@ -11,11 +11,12 @@ import HistoryTransaction from "../pages/transaction/historyTransaction";
 import BuyTransaction from "../pages/transaction/buyTransaction";
 import PaymentPage from "../pages/transaction/paymentPage";
 import SellTransaction from "../pages/transaction/sellTransaction";
-import PortfolioRecommendation from "../pages/portfolio/PortfolioRecommendation";
 import GoalDetailPage from "../pages/portfolio/GoalDetailPage";
 import HomePortfolio from "../pages/portfolio/PortfolioPage";
 import PortfolioForm from "../pages/portfolio/PortfolioForm";
-import Information from "../pages/home/Information";
+import Information from "../pages/home/information";
+import EditGoalPage from "../pages/portfolio/EditGoalPage";
+import RecommendationPage from "../pages/portfolio/RecommendationPage";
 
 export const router = createBrowserRouter([
   {
@@ -102,18 +103,26 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/portfolio/:goalId/recommendation",
-        element: (
-          <ProtectedRoute allowedRoles={["USER"]}>
-            <PortfolioRecommendation />
-          </ProtectedRoute>
-        ),
-      },
-      {
         path: "/portfolio/detail/:goalId",
         element: (
           <ProtectedRoute allowedRoles={["USER"]}>
             <GoalDetailPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/portfolio/edit/:goalId",
+        element: (
+          <ProtectedRoute allowedRoles={["USER"]}>
+            <EditGoalPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/portfolio/recommendation/:goalId",
+        element: (
+          <ProtectedRoute allowedRoles={["USER"]}>
+            <RecommendationPage />
           </ProtectedRoute>
         ),
       },

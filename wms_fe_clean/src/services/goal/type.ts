@@ -19,6 +19,7 @@ export interface SuggestedPortfolioItem {
 }
 
 export interface Product {
+  productId: string;
   categoryId: number;
   productName: string;
   productPrice: number;

@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getPortfolioByGoalId } from "../../services/goal/api";
+import useGoalById from "../hooks/useGoal/useGoalById";
 import {
   PortfolioDashboardResponse,
   PortfolioProductDetail,
 } from "../../services/goal/type";
+import { createSimulateGoal } from "../../services/simulate/api";
 import {
   PieChart,
   Pie,
@@ -19,6 +21,8 @@ const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#e11d48", "#8b5cf6"]; // More 
 
 const GoalDetailPage: React.FC = () => {
   const { goalId } = useParams();
+  const { goal } = useGoalById(goalId);
+
   const navigate = useNavigate();
   const [portfolio, setPortfolio] = useState<PortfolioDashboardResponse | null>(
     null
@@ -26,6 +30,11 @@ const GoalDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const [monthlyInvestment, setMonthlyInvestment] = useState(500000);
+  const [simulation, setSimulation] = useState<any | null>(null);
+  const [simLoading, setSimLoading] = useState(false);
+  const [simError, setSimError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPortfolio = async () => {
@@ -35,7 +44,9 @@ const GoalDetailPage: React.FC = () => {
         setPortfolio(data);
       } catch (err) {
         console.error("Error:", err);
-        setError("Failed to fetch portfolio data.");
+        setError(
+          "It seems you haven't started investing for this goal. Once you make your first investment, your portfolio details will show up here."
+        );
       } finally {
         setLoading(false);
       }
@@ -43,6 +54,25 @@ const GoalDetailPage: React.FC = () => {
 
     fetchPortfolio();
   }, [goalId]);
+
+  const handleSimulate = async () => {
+    console.log("Simulasi dijalankan!");
+    setSimLoading(true);
+    setSimError(null);
+    const token = localStorage.getItem("token") || "";
+    try {
+      const result = await createSimulateGoal(
+        { goalId: Number(goalId), monthlyInvestment },
+        token
+      );
+      setSimulation(result);
+    } catch (err) {
+      console.error("Simulate Error:", err);
+      setSimError("Gagal melakukan simulasi.");
+    } finally {
+      setSimLoading(false);
+    }
+  };
 
   const formatCurrency = (value: number) =>
     value?.toLocaleString("id-ID", { style: "currency", currency: "IDR" }) ??
@@ -82,6 +112,16 @@ const GoalDetailPage: React.FC = () => {
     return { name: category, value: total };
   });
 
+  const formatDate = (dateString: string) => {
+    const options: Intl.DateTimeFormatOptions = {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    };
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB", options); // Bisa ganti 'en-GB' ke 'id-ID' kalau mau Bahasa Indonesia
+  };
+
   return (
     <div className="container mx-auto p-4 sm:p-6 md:p-8 animate__fadeInUp">
       <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-4 sm:mb-6 animate__fadeInUp">
@@ -89,47 +129,65 @@ const GoalDetailPage: React.FC = () => {
       </h1>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
         {/* Left: Goal Summary */}
-        <div className="bg-white shadow-md rounded-xl p-4 sm:p-6 border border-gray-200 hover:shadow-2xl transform transition-all duration-300 animate__fadeInUp">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2 sm:mb-4 border-b pb-2">
+        <div className="bg-white shadow-md hover:shadow-xl rounded-2xl p-5 sm:p-6 border border-gray-200 transition-all duration-300 ease-in-out">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2">
             Goal Summary
           </h2>
-          <div className="space-y-1 sm:space-y-2">
-            <p className="text-sm sm:text-md text-gray-700">
-              <span className="font-semibold">Goal ID:</span> {portfolio.goalId}
+
+          <div className="space-y-2 text-sm sm:text-base text-gray-700">
+            <p>
+              <span className="font-medium text-gray-600">Goal Name:</span>{" "}
+              <span className="font-semibold text-gray-800">
+                {goal?.goalName}
+              </span>
             </p>
-            <p className="text-sm sm:text-md text-gray-700">
-              <span className="font-semibold">Risk Tolerance:</span>{" "}
-              Auto-Assigned
+            <p>
+              <span className="font-medium text-gray-600">Target Date:</span>{" "}
+              <span className="font-semibold text-gray-800">
+                {goal?.targetDate ? formatDate(goal.targetDate) : "-"}
+              </span>
             </p>
           </div>
-          <div className="mt-2 sm:mt-4 space-y-1 sm:space-y-2">
-            <div className="flex justify-between items-center text-sm sm:text-md">
-              <span className="text-gray-600 font-semibold">
+
+          <div className="mt-5 space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 font-medium">
                 Total Investment:
               </span>
-              <span className="text-blue-600 font-medium">
+              <span className="text-blue-600 font-semibold">
                 {formatCurrency(portfolio.totalInvestment)}
               </span>
             </div>
-            <div className="flex justify-between items-center text-sm sm:text-md">
-              <span className="text-gray-600 font-semibold">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 font-medium">
                 Estimated Return:
               </span>
-              <span className="text-green-600 font-medium">
+              <span className="text-green-600 font-semibold">
                 {formatCurrency(portfolio.estimatedReturn)}
               </span>
             </div>
-            <div className="flex justify-between items-center text-sm sm:text-md">
-              <span className="text-gray-600 font-semibold">Profit:</span>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 font-medium">Profit:</span>
               <span
                 className={
                   portfolio.totalProfit >= 0
-                    ? "text-green-600 font-medium"
-                    : "text-red-600 font-medium"
+                    ? "text-green-600 font-semibold"
+                    : "text-red-600 font-semibold"
                 }
               >
                 {formatCurrency(portfolio.totalProfit)}
               </span>
+            </div>
+
+            <div className="space-y-2 text-sm sm:text-base text-gray-700">
+              <p>
+                <span className="font-medium text-gray-600">
+                  Based on your current condition:{" "}
+                </span>{" "}
+                <span className="font-semibold text-gray-800">
+                  {goal?.insightMessage}
+                </span>
+              </p>
             </div>
           </div>
         </div>
@@ -150,7 +208,28 @@ const GoalDetailPage: React.FC = () => {
                 outerRadius={90}
                 innerRadius={50}
                 onClick={(d) => setSelectedCategory(d.name)}
-                label={window.innerWidth >= 640} // Show labels on larger screens
+                label={({ cx, cy, midAngle, outerRadius, value }) => {
+                  const RADIAN = Math.PI / 180;
+                  const radius = outerRadius + 10;
+                  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                  const percent =
+                    (value / pieData.reduce((acc, cur) => acc + cur.value, 0)) *
+                    100;
+
+                  return (
+                    <text
+                      x={x}
+                      y={y}
+                      fill="black"
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      style={{ fontSize: 12, fontWeight: "bold" }}
+                    >
+                      {`${Math.round(percent)}%`}
+                    </text>
+                  );
+                }}
               >
                 {pieData.map((entry, index) => (
                   <Cell
@@ -241,15 +320,24 @@ const GoalDetailPage: React.FC = () => {
                   </div>
                   <div>
                     <button
-                      onClick={() =>
+                      onClick={() => {
+                        localStorage.setItem(
+                          "productDetail",
+                          JSON.stringify(product)
+                        );
+                        localStorage.setItem(
+                          "goalId",
+                          portfolio.goalId.toString()
+                        );
+
                         navigate(`/sell/${product.productId}`, {
                           state: {
                             productDetail: product,
                             goalId: portfolio.goalId,
                           },
-                        })
-                      }
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-md shadow-sm transition duration-200 text-xs sm:text-sm"
+                        });
+                      }}
+                      className="mt-2 sm:mt-0 inline-block bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm px-4 py-2 rounded-lg shadow transition duration-200"
                     >
                       Sell
                     </button>
@@ -260,6 +348,56 @@ const GoalDetailPage: React.FC = () => {
           </ul>
         </div>
       )}
+
+      {/* Simulasi Investasi Section */}
+      <div className="mt-8 bg-white shadow-md rounded-xl p-4 sm:p-6 border border-gray-200 animate__fadeInUp">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2 sm:mb-4 border-b pb-2">
+          Investment Simulation
+        </h2>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+          <input
+            type="number"
+            className="w-full sm:w-60 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={monthlyInvestment}
+            onChange={(e) => setMonthlyInvestment(Number(e.target.value))}
+          />
+          <button
+            onClick={handleSimulate}
+            className="mt-3 sm:mt-0 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow transition duration-200"
+          >
+            {simLoading ? "Simulating..." : "Simulate"}
+          </button>
+        </div>
+        {simError && <p className="text-red-500 mt-2 text-sm">{simError}</p>}
+        {simulation && (
+          <div className="mt-4">
+            <p className="text-sm sm:text-md text-gray-700">
+              Months to reach target:{" "}
+              <span className="text-blue-600 font-semibold">
+                {simulation.monthsToAchieve}
+              </span>
+            </p>
+            <p className="text-sm sm:text-md text-gray-600 italic mt-2">
+              {`With a monthly investment of ${new Intl.NumberFormat("id-ID", {
+                style: "currency",
+                currency: "IDR",
+                minimumFractionDigits: 0,
+              }).format(
+                monthlyInvestment
+              )}, you are projected to reach your target of ${new Intl.NumberFormat(
+                "id-ID",
+                {
+                  style: "currency",
+                  currency: "IDR",
+                  minimumFractionDigits: 0,
+                }
+              ).format(goal.targetAmount)} in approximately ${
+                simulation.monthsToAchieve
+              } months. Keep investing consistently to stay on track!`}
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

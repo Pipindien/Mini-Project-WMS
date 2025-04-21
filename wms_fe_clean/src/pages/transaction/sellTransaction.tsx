@@ -12,7 +12,14 @@ export interface SellTransactionRequest {
 const SellTransaction: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { productDetail, goalId } = location.state || {};
+  let state = location.state || {};
+  const storedProduct = localStorage.getItem("productDetail");
+  const storedGoalId = localStorage.getItem("goalId");
+
+  const productDetail =
+    state.productDetail || (storedProduct ? JSON.parse(storedProduct) : null);
+  const goalId =
+    state.goalId || (storedGoalId ? Number(storedGoalId) : undefined);
 
   const [lot, setLot] = useState<number>(1);
   const [showModal, setShowModal] = useState<boolean>(false);

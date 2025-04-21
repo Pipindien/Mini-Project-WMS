@@ -1,6 +1,8 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import useProductById from "../hooks/useProduct/useProductById";
+import useSimulateProduct from "../hooks/useSimulate/useSimulate";
+import { useState } from "react";
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams();
@@ -10,7 +12,17 @@ const ProductDetail: React.FC = () => {
   const formatCurrency = (value: number) =>
     value.toLocaleString("id-ID", { style: "currency", currency: "IDR" });
 
-  const formatRate = (rate: number) => `${(rate * 100).toFixed(2)}%`;
+  const formatRate = (rate: number) => `${rate.toFixed(2)}%`;
+  const {
+    data,
+    loading: simulating,
+    error: simulateError,
+    simulate,
+  } = useSimulateProduct();
+
+  const [monthlyInvestment, setMonthlyInvestment] = useState<number>(0);
+  const [years, setYears] = useState<number>(1);
+  const isValid = monthlyInvestment > 0 && years >= 1 && years <= 10;
 
   if (loading) {
     return (
@@ -46,6 +58,11 @@ const ProductDetail: React.FC = () => {
 
   const handleBuy = () => {
     navigate(`/buy/${product.productId}`);
+  };
+
+  const handleSimulate = () => {
+    const token = localStorage.getItem("token") || "";
+    simulate({ productId: product.productId, monthlyInvestment, years }, token);
   };
 
   const getParaphrasedDescription = (
@@ -143,6 +160,92 @@ const ProductDetail: React.FC = () => {
             </div>
           </div>
         </div>
+        {/* Investment Simulation */}
+        <div className="mt-10">
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">
+            Investment Simulation
+          </h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Monthly Investment (Rp)
+              </label>
+              <input
+                type="number"
+                className="w-full border border-gray-300 px-4 py-2 rounded-lg mt-1 focus:outline-none focus:ring-2 focus:ring-green-500"
+                value={monthlyInvestment}
+                onChange={(e) => setMonthlyInvestment(Number(e.target.value))}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Duration (Years)
+              </label>
+              <input
+                type="number"
+                className="w-full border border-gray-300 px-4 py-2 rounded-lg mt-1 focus:outline-none focus:ring-2 focus:ring-green-500"
+                value={years}
+                onChange={(e) => setYears(Number(e.target.value))}
+              />
+              {years !== 0 && (years < 1 || years > 10) && (
+                <p className="text-sm text-red-500 mt-1">
+                  Duration must be between 1 to 10 years
+                </p>
+              )}
+            </div>
+
+            <button
+              onClick={handleSimulate}
+              disabled={!isValid}
+              className={`w-full mt-2 px-5 py-2.5 rounded-lg font-medium transition ${
+                isValid
+                  ? "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
+            >
+              Simulate
+            </button>
+          </div>
+        </div>
+
+        {/* Simulation Result */}
+        {simulating && (
+          <p className="mt-6 text-blue-500 font-medium">
+            Calculating simulation...
+          </p>
+        )}
+
+        {simulateError && (
+          <p className="mt-6 text-red-500 font-medium">{simulateError}</p>
+        )}
+
+        {data && (
+          <div className="mt-8 bg-green-50 p-5 rounded-xl shadow-sm">
+            <p className="font-semibold text-green-800 mb-3">
+              With a monthly investment of Rp{" "}
+              {monthlyInvestment.toLocaleString()}, your portfolio will grow to
+              an estimated value of Rp {data.futureValue.toLocaleString()} in{" "}
+              {years} years, based on the product rate of return.
+            </p>
+            <ul className="text-sm text-gray-800 space-y-1">
+              <li>
+                <span className="font-medium">Future Value:</span> Rp{" "}
+                {data.futureValue.toLocaleString()}
+              </li>
+              <li>
+                <span className="font-medium">Estimated Time to Achieve:</span>{" "}
+                {data.monthsToAchieve} months
+              </li>
+              <li>
+                <span className="font-medium">
+                  Required Monthly Investment:
+                </span>{" "}
+                Rp {data.monthlyInvestmentNeeded.toLocaleString()}
+              </li>
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );
