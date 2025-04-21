@@ -3,7 +3,6 @@ package com.users.app.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.users.app.dto.LoginRequest;
 import com.users.app.dto.LoginResponse;
-import com.users.app.entity.Users;
 import com.users.app.service.LoginService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,16 +32,5 @@ public class AuthController {
     public ResponseEntity<LoginResponse> getUser(@RequestHeader String token) throws JsonProcessingException {
         LoginResponse loginResponse = loginService.checkToken(token);
         return ResponseEntity.ok(loginResponse);
-    }
-
-    @PutMapping("/profile")
-    public ResponseEntity<Users> updateProfile(
-            @RequestHeader("Authorization") String token,
-          @Valid @RequestBody Users updatedProfile) throws JsonProcessingException {
-
-        String jwtToken = token.replace("Bearer ", "");
-
-        Users updated = loginService.updateProfile(jwtToken, updatedProfile);
-        return ResponseEntity.ok(updated);
     }
 }

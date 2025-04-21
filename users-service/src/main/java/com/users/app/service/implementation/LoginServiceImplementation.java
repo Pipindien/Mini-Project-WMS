@@ -25,7 +25,8 @@ public class LoginServiceImplementation implements LoginService {
 
     @Autowired
     private  UsersRepository usersRepository;
-    private final PasswordEncoder passwordEncoder;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper;
     @Autowired
     private AuditTrailsService auditTrailsService;
@@ -166,44 +167,4 @@ public class LoginServiceImplementation implements LoginService {
             throw new TokenExpiredException("Token Invalid or Expired.");
         }
     }
-
-    public Users updateProfile(String token, Users updatedProfile) throws JsonProcessingException {
-        try {
-            String username = jwtService.extractUsername(token);
-
-            Users existingUser = usersRepository.findByUsername(username)
-                    .orElseThrow(() -> new UsernameNotFoundException("Username Not Found"));
-
-            existingUser.setFullName(updatedProfile.getFullName());
-            existingUser.setEmail(updatedProfile.getEmail());
-            existingUser.setPhone(updatedProfile.getPhone());
-            existingUser.setAge(updatedProfile.getAge());
-            existingUser.setSalary(updatedProfile.getSalary());
-
-            Users savedUser = usersRepository.save(existingUser);
-
-            auditTrailsService.insertAuditTrails(AuditTrailsRequest.builder()
-                    .action(GeneralConstant.LOG_ACVITIY_UPDATE)
-                    .description("User profile updated successfully")
-                    .date(new Date())
-                    .request(objectMapper.writeValueAsString(updatedProfile))
-                    .response(objectMapper.writeValueAsString(savedUser))
-                    .build());
-
-            return savedUser;
-
-        } catch (Exception ex) {
-            auditTrailsService.insertAuditTrails(AuditTrailsRequest.builder()
-                    .action(GeneralConstant.LOG_ACVITIY_UPDATE)
-                    .description("Failed to update profile")
-                    .date(new Date())
-                    .request(objectMapper.writeValueAsString(updatedProfile))
-                    .response(ex.getMessage())
-                    .build());
-
-            throw ex;
-        }
-    }
-
-
 }

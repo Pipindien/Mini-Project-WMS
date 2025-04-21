@@ -53,7 +53,7 @@ public class JWTServiceImplementation implements JWTService {
         return claims.get("custId", Long.class);
     }
 
-    private boolean isTokenExpired(String token) {
+    public boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
