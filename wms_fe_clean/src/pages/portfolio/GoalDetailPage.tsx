@@ -34,7 +34,8 @@ const GoalDetailPageEmptyState: React.FC = () => {
         </div>
         <p className="text-gray-600 text-center">
           It seems you haven't started investing for this goal. Once you make
-          your first investment, your portfolio details will show up here. Start investing now by returning to the dashboard below!
+          your first investment, your portfolio details will show up here. Start
+          investing now by returning to the dashboard below!
         </p>
         <button
           className="mt-6 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 px-6 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 transition-colors duration-200"
@@ -333,6 +334,7 @@ const GoalDetailPage: React.FC = () => {
                           state: {
                             productDetail: product,
                             goalId: portfolio.goalId,
+                            goalName: goal.goalName, // tambahkan ini
                           },
                         });
                       }}

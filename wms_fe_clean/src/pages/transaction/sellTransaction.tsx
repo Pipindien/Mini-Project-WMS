@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { sellProduct } from "../../services/transaction/api";
 import { FaSpinner } from "react-icons/fa";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export interface SellTransactionRequest {
   productName: string;
@@ -13,13 +15,16 @@ const SellTransaction: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   let state = location.state || {};
+
   const storedProduct = localStorage.getItem("productDetail");
   const storedGoalId = localStorage.getItem("goalId");
+  const storedGoalName = localStorage.getItem("goalName");
 
   const productDetail =
     state.productDetail || (storedProduct ? JSON.parse(storedProduct) : null);
   const goalId =
     state.goalId || (storedGoalId ? Number(storedGoalId) : undefined);
+  const goalName = state.goalName || storedGoalName || "Unknown Goal";
 
   const [lot, setLot] = useState<number>(1);
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -27,38 +32,38 @@ const SellTransaction: React.FC = () => {
 
   const handleSell = async () => {
     if (!productDetail || goalId === undefined) {
-      alert("Data tidak lengkap.");
+      toast.error("Data tidak lengkap.");
       return;
     }
 
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Token tidak ditemukan. Silakan login kembali.");
+      toast.error("Token tidak ditemukan. Silakan login kembali.");
       return;
     }
 
     if (lot < 1 || isNaN(lot)) {
-      alert("Jumlah lot tidak valid.");
+      toast.warn("Jumlah lot tidak valid.");
       return;
     }
 
     const requestPayload: SellTransactionRequest = {
       productName: productDetail.productName,
       lot: lot,
-      goalId: Number(goalId),
+      goalId: Number(goalId), // tetap kirim goalId
     };
 
     try {
       setIsSelling(true);
       await sellProduct(requestPayload, token);
-      alert("Transaksi penjualan berhasil!");
-      navigate("/portfolio");
+      toast.success("Transaksi penjualan berhasil!");
+      setTimeout(() => navigate("/portfolio"), 1500);
     } catch (err: any) {
       const errorMessage =
         err.response?.data?.message ||
         err.message ||
         "Gagal melakukan penjualan.";
-      alert(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsSelling(false);
     }
@@ -77,11 +82,13 @@ const SellTransaction: React.FC = () => {
     return (
       <div className="text-center mt-10 text-red-500">
         Data produk tidak ditemukan.
+        <ToastContainer />
       </div>
     );
 
   return (
     <div className="max-w-2xl mx-auto p-8 bg-white shadow-lg rounded-3xl mt-12 border border-gray-200 transition-all duration-300 ease-in-out">
+      <ToastContainer position="top-center" autoClose={2500} />
       <h1 className="text-3xl font-bold text-indigo-700 mb-8 text-center">
         Sell Stock
       </h1>
@@ -102,9 +109,9 @@ const SellTransaction: React.FC = () => {
               {formatCurrency(productDetail.buyPrice)}
             </span>
           </p>
-          {goalId && (
+          {goalName && (
             <p className="text-sm text-gray-600">
-              Goal ID: <span className="font-medium">{goalId}</span>
+              Goal: <span className="font-medium">{goalName}</span>
             </p>
           )}
         </div>
@@ -160,8 +167,7 @@ const SellTransaction: React.FC = () => {
             <p className="text-sm text-gray-600 mb-4 text-center">
               Are you sure you want to sell{" "}
               <span className="font-semibold">{productDetail.productName}</span>
-              ?
-              <br />
+              ?<br />
               Number of Lots:{" "}
               <span className="font-semibold text-red-600">{lot}</span>
             </p>

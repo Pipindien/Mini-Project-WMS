@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -29,11 +30,13 @@ public class CategoryService {
     public CategoryResponse saveCategory(CategoryRequest categoryRequest) throws JsonProcessingException {
         Category category = Category.builder()
                 .categoryType(categoryRequest.getCategoryType())
+                .createdDate(new Date())
                 .build();
         Category savedCategory = categoryRepository.save(category);
 
         CategoryResponse response = CategoryResponse.builder()
                 .categoryType(savedCategory.getCategoryType())
+                .createdDate(savedCategory.getCreatedDate())
                 .build();
 
         auditTrailsService.logsAuditTrails(GeneralConstant.LOG_ACTIVITY_SAVE_CATEGORY,
@@ -73,6 +76,7 @@ public class CategoryService {
                 .build();
 
         existingCategory.setCategoryType(categoryRequest.getCategoryType());
+        existingCategory.setUpdateDate(categoryRequest.getUpdateDate());
         Category updatedCategory = categoryRepository.save(existingCategory);
 
         CategoryResponse response = CategoryResponse.builder()

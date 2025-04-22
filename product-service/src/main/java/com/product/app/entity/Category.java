@@ -3,6 +3,8 @@ package com.product.app.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Date;
+
 @Entity
 @Builder
 @Data
@@ -15,4 +17,6 @@ public class Category {
     @Column(name = "category_id")
     private Long categoryId;
     private String categoryType;
+    private Date createdDate;
+    private Date updateDate;
 }

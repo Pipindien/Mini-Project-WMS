@@ -1,16 +1,12 @@
 package com.product.app.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.product.app.dto.CategoryRequest;
 import com.product.app.dto.ProductRequest;
 import com.product.app.dto.ProductResponse;
 import com.product.app.entity.Category;
 import com.product.app.entity.Product;
 import com.product.app.repository.ProductRepository;
 import com.product.app.repository.CategoryRepository;
-import com.product.app.advice.exception.ProductNotFoundException;
-import com.product.app.advice.exception.CategoryNotFoundException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -37,37 +33,26 @@ class ProductServiceTest {
     @Mock
     private AuditTrailsService auditTrailsService;
 
-    @Mock
-    private ProductRequest productRequest;
-
-    @Mock
-    private ProductResponse productResponse;
-
-    @Mock
-    private Product product;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
+    private final Date now = new Date();
 
     @Test
-    void saveProduct() throws JsonProcessingException {
+    void saveProduct_success() throws JsonProcessingException {
         // Arrange
-        Category mockCategory = new Category();
-        mockCategory.setCategoryId(1L);
-        mockCategory.setCategoryType("Fruit");
+        Category mockCategory = Category.builder()
+                .categoryId(1L)
+                .categoryType("Fruit")
+                .createdDate(now)
+                .build();
 
-        Product mockProduct = new Product();
-        mockProduct.setProductId(1L);
-        mockProduct.setProductName("Product1");
-        mockProduct.setProductPrice(100.0);
-        mockProduct.setProductRate(5.0);
-        mockProduct.setCategoryId(1L);
-        mockProduct.setCreatedDate(new Date());
-
-        lenient().when(categoryRepository.findById(anyLong())).thenReturn(Optional.of(mockCategory));
-        lenient().when(productRepository.save(any(Product.class))).thenReturn(mockProduct);
+        Product mockSavedProduct = Product.builder()
+                .productId(1L)
+                .productName("Product1")
+                .productPrice(100.0)
+                .productRate(5.0)
+                .categoryId(1L)
+                .createdDate(now)
+                .isDeleted(false)
+                .build();
 
         ProductRequest productRequest = ProductRequest.builder()
                 .productName("Product1")
@@ -75,6 +60,9 @@ class ProductServiceTest {
                 .productRate(5.0)
                 .categoryId(1L)
                 .build();
+
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(mockCategory));
+        when(productRepository.save(any(Product.class))).thenReturn(mockSavedProduct);
 
         // Act
         ProductResponse result = productService.saveProduct(productRequest);
@@ -85,100 +73,172 @@ class ProductServiceTest {
         assertEquals(100.0, result.getProductPrice());
         assertEquals(5.0, result.getProductRate());
         assertEquals(1L, result.getCategoryId());
-        assertEquals("Fruit", result.getProductCategory());
+        assertEquals(now, result.getCreatedDate());
 
         verify(productRepository).save(any(Product.class));
+        verify(auditTrailsService).logsAuditTrails(anyString(), anyString(), anyString(), eq("Insert Product Save"));
     }
 
-
     @Test
-    void getProductByProductName() throws JsonProcessingException {
+    void getProductByProductName_success() throws JsonProcessingException {
         // Arrange
-        when(productRepository.findProductByProductName(anyString()))
-                .thenReturn(Optional.of(new Product()));
+        Product mockProduct = Product.builder()
+                .productId(1L)
+                .productName("Product1")
+                .productPrice(100.0)
+                .productRate(4.5)
+                .categoryId(1L)
+                .createdDate(now)
+                .build();
+
+        Category mockCategory = Category.builder()
+                .categoryId(1L)
+                .categoryType("Fruit")
+                .build();
+
+        when(productRepository.findProductByProductName("Product1")).thenReturn(Optional.of(mockProduct));
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(mockCategory));
 
         // Act
         ProductResponse result = productService.getProductByProductName("Product1");
 
         // Assert
         assertNotNull(result);
+        assertEquals("Product1", result.getProductName());
+        assertEquals("Fruit", result.getProductCategory());
         verify(productRepository).findProductByProductName("Product1");
     }
 
     @Test
-    void getAllProducts() throws JsonProcessingException {
-        // Arrange
-        lenient().when(productRepository.findAllActiveProducts()).thenReturn(List.of(new Product()));
+    void getAllProducts_success() throws JsonProcessingException {
+        Product mockProduct = Product.builder()
+                .productId(1L)
+                .productName("Product1")
+                .productPrice(50.0)
+                .productRate(4.0)
+                .categoryId(2L)
+                .createdDate(now)
+                .build();
 
-        // Act
+        Category mockCategory = Category.builder()
+                .categoryId(2L)
+                .categoryType("Snack")
+                .build();
+
+        when(productRepository.findAllActiveProducts()).thenReturn(List.of(mockProduct));
+        when(categoryRepository.findById(2L)).thenReturn(Optional.of(mockCategory));
+
         List<ProductResponse> result = productService.getAllProducts();
 
-        // Assert
         assertNotNull(result);
-        assertFalse(result.isEmpty());
-        verify(productRepository).findAllActiveProducts();
+        assertEquals(1, result.size());
+        assertEquals("Snack", result.get(0).getProductCategory());
     }
 
     @Test
-    void updateProduct() throws JsonProcessingException {
-        // Arrange
-        Product existingProduct = new Product();
-        when(productRepository.findById(anyLong())).thenReturn(Optional.of(existingProduct));
-        when(categoryRepository.findById(anyLong())).thenReturn(Optional.of(new Category()));
+    void updateProduct_success() throws JsonProcessingException {
+        Product existingProduct = Product.builder()
+                .productId(1L)
+                .productName("Old Product")
+                .productPrice(90.0)
+                .productRate(4.0)
+                .categoryId(1L)
+                .createdDate(now)
+                .build();
+
+        Category mockCategory = Category.builder()
+                .categoryId(2L)
+                .categoryType("Snack")
+                .build();
+
+        ProductRequest updateRequest = ProductRequest.builder()
+                .productName("Updated Product")
+                .productPrice(150.0)
+                .productRate(5.0)
+                .categoryId(2L)
+                .build();
+
+        when(productRepository.findById(1L)).thenReturn(Optional.of(existingProduct));
+        when(categoryRepository.findById(2L)).thenReturn(Optional.of(mockCategory));
         when(productRepository.save(any(Product.class))).thenReturn(existingProduct);
 
-        ProductRequest productRequest = ProductRequest.builder()
-                .productName("Update Product1")
-                .productPrice(200.0)
-                .productRate(5.0)
-                .categoryId(1L)
-                .build();
-        // Act
-        ProductResponse result = productService.updateProduct(1L, productRequest);
+        ProductResponse response = productService.updateProduct(1L, updateRequest);
 
-        // Assert
-        assertNotNull(result);
+        assertNotNull(response);
+        assertEquals("Updated Product", response.getProductName());
+        assertEquals(150.0, response.getProductPrice());
+        assertEquals(5.0, response.getProductRate());
         verify(productRepository).save(any(Product.class));
     }
 
     @Test
-    void deleteProduct() throws JsonProcessingException {
-        // Arrange
-        Product product = new Product();
-        when(productRepository.findById(anyLong())).thenReturn(Optional.of(product));
+    void deleteProduct_success() throws JsonProcessingException {
+        Product product = Product.builder()
+                .productId(1L)
+                .productName("ProductToDelete")
+                .productPrice(100.0)
+                .productRate(3.0)
+                .categoryId(1L)
+                .createdDate(now)
+                .isDeleted(false)
+                .build();
 
-        // Act
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+
         String result = productService.deleteProduct(1L);
 
-        // Assert
         assertEquals("Produk berhasil dihapus (soft delete).", result);
         verify(productRepository).save(any(Product.class));
     }
 
     @Test
-    void getProductsByCategoryId() throws JsonProcessingException {
-        // Arrange
-        when(productRepository.findProductsByCategoryId(anyLong())).thenReturn(List.of(new Product()));
+    void getProductsByCategoryId_success() throws JsonProcessingException {
+        Product product = Product.builder()
+                .productId(1L)
+                .productName("Product1")
+                .productPrice(120.0)
+                .productRate(4.0)
+                .categoryId(5L)
+                .createdDate(now)
+                .build();
 
-        // Act
-        List<ProductResponse> result = productService.getProductsByCategoryId(1L);
+        Category category = Category.builder()
+                .categoryId(5L)
+                .categoryType("Drinks")
+                .build();
 
-        // Assert
-        assertNotNull(result);
+        when(productRepository.findProductsByCategoryId(5L)).thenReturn(List.of(product));
+        when(categoryRepository.findById(5L)).thenReturn(Optional.of(category));
+
+        List<ProductResponse> result = productService.getProductsByCategoryId(5L);
+
         assertFalse(result.isEmpty());
-        verify(productRepository).findProductsByCategoryId(1L);
+        assertEquals("Drinks", result.get(0).getProductCategory());
     }
 
     @Test
-    void getProductById() throws JsonProcessingException {
-        // Arrange
-        when(productRepository.findProductByProductId(anyLong())).thenReturn(Optional.of(new Product()));
+    void getProductById_success() throws JsonProcessingException {
+        Product product = Product.builder()
+                .productId(2L)
+                .productName("SingleProduct")
+                .productPrice(300.0)
+                .productRate(5.0)
+                .categoryId(6L)
+                .createdDate(now)
+                .build();
 
-        // Act
-        ProductResponse result = productService.getProductById(1L);
+        Category category = Category.builder()
+                .categoryId(6L)
+                .categoryType("Electronics")
+                .build();
 
-        // Assert
+        when(productRepository.findProductByProductId(2L)).thenReturn(Optional.of(product));
+        when(categoryRepository.findById(6L)).thenReturn(Optional.of(category));
+
+        ProductResponse result = productService.getProductById(2L);
+
         assertNotNull(result);
-        verify(productRepository).findProductByProductId(1L);
+        assertEquals("Electronics", result.getProductCategory());
+        verify(productRepository).findProductByProductId(2L);
     }
 }

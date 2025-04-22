@@ -15,4 +15,5 @@ public class ProductResponse {
     private Long categoryId;
     private String productCategory;
     private Date createdDate;
+    private Date updateDate;
 }

@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,7 +49,13 @@ class CategoryServiceTest {
                 .categoryType("Fruit")
                 .build();
 
-        category = new Category(1L, "Fruit");
+        Category category = Category.builder()
+                .categoryId(1L)
+                .categoryType("Fruit")
+                .createdDate(new Date())
+                .updateDate(new Date())
+                .build();
+
 
         lenient().when(categoryRepository.save(any(Category.class))).thenReturn(category);
         lenient().when(categoryRepository.findById(any(Long.class))).thenReturn(Optional.of(category));

@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 
 @Entity
 @Table(name ="users")
@@ -32,4 +34,5 @@ public class Users {
     private Integer age;
     private Double salary;
     private String role;
+    private Date createdDate;
 }
