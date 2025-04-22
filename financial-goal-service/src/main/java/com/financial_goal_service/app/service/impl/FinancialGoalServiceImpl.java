@@ -2,6 +2,7 @@ package com.financial_goal_service.app.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.financial_goal_service.app.advice.exception.GoalNotFoundException;
 import com.financial_goal_service.app.client.ProductClient;
 import com.financial_goal_service.app.client.dto.CategoryResponse;
 import com.financial_goal_service.app.client.dto.ProductResponse;
@@ -40,33 +41,36 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
 
     @Override
     public List<FinancialGoalResponse> getGoals(String token, String status) throws JsonProcessingException {
-        UsersResponse userProfile = authClientService.getUserProfileFromToken(token);
-        Long idCust = userProfile.getCustId();
+        try {
+            UsersResponse userProfile = authClientService.getUserProfileFromToken(token);
+            Long idCust = userProfile.getCustId();
 
+            List<FinancialGoal> goals = financialGoalRepository.findByCustIdAndStatus(idCust, status);
 
-        List<FinancialGoal> goals = financialGoalRepository.findByCustIdAndStatus(idCust, status);
+            auditTrailsService.logsAuditTrails(
+                    GeneralConstant.LOG_ACTIVITY_GET_ALL,
+                    mapper.writeValueAsString(idCust),
+                    mapper.writeValueAsString(status),
+                    "Get All Financial Goal"
+            );
 
-        auditTrailsService.logsAuditTrails(
-                GeneralConstant.LOG_ACTIVITY_GET_ALL,
-                mapper.writeValueAsString(idCust),
-                mapper.writeValueAsString(status),
-                "Get All Financial Goal"
-        );
-
-        return goals.stream().map(goal -> FinancialGoalResponse.builder()
-                        .goalId(goal.getGoalId())
-                        .goalName(goal.getGoalName())
-                        .targetAmount(goal.getTargetAmount())
-                        .targetDate(goal.getTargetDate())
-                        .riskTolerance(goal.getRiskTolerance())
-                        .createdDate(goal.getCreatedDate())
-                        .currentAmount(goal.getCurrentAmount())
-                        .status(goal.getStatus())
-                        .custId(goal.getCustId())
-                        .insightMessage(goal.getInsightMessage())
-                        .build())
-                .toList();
-
+            return goals.stream().map(goal -> FinancialGoalResponse.builder()
+                            .goalId(goal.getGoalId())
+                            .goalName(goal.getGoalName())
+                            .targetAmount(goal.getTargetAmount())
+                            .targetDate(goal.getTargetDate())
+                            .riskTolerance(goal.getRiskTolerance())
+                            .createdDate(goal.getCreatedDate())
+                            .currentAmount(goal.getCurrentAmount())
+                            .status(goal.getStatus())
+                            .custId(goal.getCustId())
+                            .insightMessage(goal.getInsightMessage())
+                            .build())
+                    .toList();
+        }
+        catch (Exception e) {
+            throw new GoalNotFoundException("Goal Not Found");
+        }
     }
 
     public String determineRiskTolerance(Integer age, Double salary) {
@@ -95,7 +99,6 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
             Long idCust = userProfile.getCustId();
 
             String riskTolerance = determineRiskTolerance(userProfile.getAge(), userProfile.getSalary());
-
 
             FinancialGoal financialGoal = new FinancialGoal();
             financialGoal.setGoalName(financialGoalRequest.getGoalName());
@@ -139,7 +142,6 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
 
     @Override
     public FinancialGoalResponse getGoalById(Long goalId, String token) throws JsonProcessingException {
-
         Optional<FinancialGoal> goalOpt = financialGoalRepository.findByGoalId(goalId);
         if (goalOpt.isPresent()) {
 
@@ -166,7 +168,7 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
 
             return response;
         } else {
-            throw new RuntimeException("Goal not found");
+            throw new GoalNotFoundException("Goal not found");
         }
     }
 
@@ -199,7 +201,7 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
 
             return response;
         } else {
-            throw new RuntimeException("Goal not found");
+            throw new GoalNotFoundException("Goal not found");
         }
     }
 
@@ -207,7 +209,7 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
     public String archiveGoal(Long goalId) throws JsonProcessingException {
         Optional<FinancialGoal> goalOpt = financialGoalRepository.findByGoalId(goalId);
         if (goalOpt.isEmpty()) {
-            throw new RuntimeException("Goal not found");
+            throw new GoalNotFoundException("Goal not found");
         }
 
         FinancialGoal goal = goalOpt.get();
@@ -225,8 +227,6 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
                 mapper.writeValueAsString(responseMessage),
                 "Get Financial Goal by Id"
         );
-
-
         return responseMessage;
     }
 
@@ -237,7 +237,7 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
             UsersResponse userProfile = authClientService.getUserProfileFromToken(token);
             Optional<FinancialGoal> goalOpt = financialGoalRepository.findByGoalId(goalId);
             if (goalOpt.isEmpty()) {
-                throw new RuntimeException("Goal not found");
+                throw new GoalNotFoundException("Goal not found");
             }
 
             FinancialGoal goal = goalOpt.get();
@@ -276,7 +276,6 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
 
     @Override
     public FinancialGoalResponse getGoalByName(String goalName, String token) throws JsonProcessingException {
-        //Long custId = authClientService.getIdCustFromToken(token);
 
         Optional<FinancialGoal> goalOpt = financialGoalRepository.findByGoalName(goalName);
         if (goalOpt.isPresent()) {
@@ -304,31 +303,26 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
 
             return response;
         } else {
-            throw new RuntimeException("Goal not found");
+            throw new GoalNotFoundException("Goal not found");
         }
     }
 
 
     @Override
     public SuggestedPortfolioResponse getSuggestedPortfolio(Long goalId) throws JsonProcessingException {
-        // Fetch Financial Goal and handle possible exception
         FinancialGoal goal = financialGoalRepository.findByGoalId(goalId)
-                .orElseThrow(() -> new RuntimeException("Financial Goal not found"));
+                .orElseThrow(() -> new GoalNotFoundException("Financial Goal not found"));
 
-        // Fetch all categories once to avoid redundant network calls
         List<CategoryResponse> categories = productClient.getAllCategories();
         if (categories == null || categories.isEmpty()) {
             throw new IllegalStateException("Category list is empty or null");
         }
 
-        // Get risk tolerance and allocations using fetched categories
         String riskTolerance = goal.getRiskTolerance();
         List<PortfolioAllocation> allocations = getPortfolioAllocationByRiskTolerance(riskTolerance, categories);
 
-        // Map to hold recommended products per category
         Map<String, List<RecommendedProduct>> recommendedProducts = new HashMap<>();
 
-        // Process each allocation and fetch the recommended products
         for (PortfolioAllocation alloc : allocations) {
             List<RecommendedProduct> products = getRecommendedProductsByCategoryId(alloc.getCategoryId());
             recommendedProducts.put(alloc.getCategoryType(), products);
@@ -350,7 +344,6 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
                 .build();
     }
 
-    // Fixed to accept category list as param (avoid double fetch)
     private List<PortfolioAllocation> getPortfolioAllocationByRiskTolerance(String riskTolerance, List<CategoryResponse> categories) {
         return switch (riskTolerance) {
             case "Aggressive" -> getPortfolioAllocations(categories, this::getPercentageForAggressive);
@@ -360,7 +353,6 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
         };
     }
 
-    // Reusable allocation generator
     private List<PortfolioAllocation> getPortfolioAllocations(List<CategoryResponse> categories,
                                                               Function<String, Integer> getPercentageFunction) {
         return categories.stream()
@@ -408,40 +400,63 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
     }
 
     private List<RecommendedProduct> getRecommendedProductsByCategoryId(Long categoryId) {
-        List<ProductResponse> products = productClient.getProductByCategoryId(categoryId);
+        try {
+            List<ProductResponse> products = productClient.getProductByCategoryId(categoryId);
 
-        return products.stream()
-                .map(p -> RecommendedProduct.builder()
-                        .productId(p.getProductId())
-                        .productName(p.getProductName())
-                        .categoryId(p.getCategoryId())
-                        .productRate(p.getProductRate())
-                        .productPrice(p.getProductPrice())
-                        .build())
-                .toList();
+            return products.stream()
+                    .map(p -> RecommendedProduct.builder()
+                            .productId(p.getProductId())
+                            .productName(p.getProductName())
+                            .categoryId(p.getCategoryId())
+                            .productRate(p.getProductRate())
+                            .productPrice(p.getProductPrice())
+                            .build())
+                    .toList();
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Failed to get recommended products", e);
+        }
     }
 
     @Override
     @Transactional
-    public void updateProgress(Long goalId, UpdateProgressRequest request) throws JsonProcessingException {
+    public UpdateProgressResponse updateProgress(Long goalId, UpdateProgressRequest request) throws JsonProcessingException {
         FinancialGoal goal = financialGoalRepository.findById(goalId)
-                .orElseThrow(() -> new RuntimeException("Goal not found"));
+                .orElseThrow(() -> new GoalNotFoundException("Goal not found"));
 
-        if (request.getCurrentAmount() != null) {
-            goal.setCurrentAmount(request.getCurrentAmount());
+        try {
+            // Update the current amount if provided
+            if (request.getCurrentAmount() != null) {
+                goal.setCurrentAmount(request.getCurrentAmount());
+            }
+
+            // Update the insight message if provided
+            if (request.getInsightMessage() != null) {
+                goal.setInsightMessage(request.getInsightMessage());
+            }
+            goal.setUpdatedDate(new Date());
+
+            // Log the audit trail
+            auditTrailsService.logsAuditTrails(
+                    GeneralConstant.LOG_ACTIVITY_UPDATE_PROGRESS,
+                    mapper.writeValueAsString(goalId),
+                    mapper.writeValueAsString(request),
+                    "Update Progress After Transaction"
+            );
+
+            financialGoalRepository.save(goal);
+
+            UpdateProgressResponse response = UpdateProgressResponse.builder()
+                    .goalId(goal.getGoalId())
+                    .currentAmount(goal.getCurrentAmount())
+                    .insightMessage(goal.getInsightMessage())
+                    .updatedDate(goal.getUpdatedDate())
+                    .build();
+            return response;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update progress", e);
         }
-
-        if (request.getInsightMessage() != null) {
-            goal.setInsightMessage(request.getInsightMessage());
-        }
-        auditTrailsService.logsAuditTrails(
-                GeneralConstant.LOG_ACTIVITY_UPDATE_PROGRESS,
-                mapper.writeValueAsString(goalId),
-                mapper.writeValueAsString(request),
-                "Update Progress After Transaction"
-        );
-
-        financialGoalRepository.save(goal);
     }
 
 }

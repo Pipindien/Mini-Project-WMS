@@ -1,10 +1,7 @@
 package com.financial_goal_service.app.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.financial_goal_service.app.dto.FinancialGoalRequest;
-import com.financial_goal_service.app.dto.FinancialGoalResponse;
-import com.financial_goal_service.app.dto.SuggestedPortfolioResponse;
-import com.financial_goal_service.app.dto.UpdateProgressRequest;
+import com.financial_goal_service.app.dto.*;
 
 import java.util.List;
 
@@ -24,8 +21,8 @@ public interface FinancialGoalService {
 
     FinancialGoalResponse getGoalByName(String goalName, String token) throws JsonProcessingException;
 
-FinancialGoalResponse getAllGoals(Long goalId, String token) throws JsonProcessingException;
-    void updateProgress(Long goalId, UpdateProgressRequest request) throws JsonProcessingException;
+    FinancialGoalResponse getAllGoals(Long goalId, String token) throws JsonProcessingException;
+    UpdateProgressResponse updateProgress(Long goalId, UpdateProgressRequest request) throws JsonProcessingException;
 
 
 }
