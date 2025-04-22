@@ -3,6 +3,7 @@ package com.financial_goal_service.app.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.financial_goal_service.app.client.ProductClient;
+import com.financial_goal_service.app.client.dto.CategoryResponse;
 import com.financial_goal_service.app.client.dto.ProductResponse;
 import com.financial_goal_service.app.client.dto.UsersResponse;
 import com.financial_goal_service.app.dto.*;
@@ -17,6 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class FinancialGoalServiceImpl implements FinancialGoalService {
@@ -226,46 +229,6 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
 
         return responseMessage;
     }
-    private Long mapCategoryToId(String categoryName) {
-        return switch (categoryName) {
-            case "Saham" -> 2L;
-            case "Obligasi" -> 3L;
-            case "Pasar Uang" -> 4L;
-            default -> throw new IllegalArgumentException("Unknown category: " + categoryName);
-        };
-    }
-
-
-
-    @Override
-    public SuggestedPortfolioResponse getSuggestedPortfolio(Long goalId) throws JsonProcessingException {
-        FinancialGoal goal = financialGoalRepository.findByGoalId(goalId)
-                .orElseThrow(() -> new RuntimeException("Financial Goal not found"));
-
-        String riskTolerance = goal.getRiskTolerance();
-        List<PortfolioAllocation> allocations = getPortfolioAllocationByRiskTolerance(riskTolerance);
-
-        Map<String, List<RecommendedProduct>> recommendedProducts = new HashMap<>();
-
-        for (PortfolioAllocation alloc : allocations) {
-            Long categoryId = mapCategoryToId(alloc.getCategory());
-            List<RecommendedProduct> products = getRecommendedProductsByCategoryId(categoryId);
-            recommendedProducts.put(alloc.getCategory(), products);
-        }
-        auditTrailsService.logsAuditTrails(
-                GeneralConstant.LOG_ACTIVITY_GET_SUGGESTED_PORTO,
-                mapper.writeValueAsString(goalId),
-                mapper.writeValueAsString(goalId),
-                "Get Suggested Portfolio"
-        );
-
-        return SuggestedPortfolioResponse.builder()
-                .goalId(goalId)
-                .suggestedPortfolio(allocations)
-                .recommendedProducts(recommendedProducts)
-                .build();
-    }
-
 
 
     @Override
@@ -345,24 +308,102 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
         }
     }
 
-    private List<PortfolioAllocation> getPortfolioAllocationByRiskTolerance(String riskTolerance) {
+
+    @Override
+    public SuggestedPortfolioResponse getSuggestedPortfolio(Long goalId) throws JsonProcessingException {
+        // Fetch Financial Goal and handle possible exception
+        FinancialGoal goal = financialGoalRepository.findByGoalId(goalId)
+                .orElseThrow(() -> new RuntimeException("Financial Goal not found"));
+
+        // Fetch all categories once to avoid redundant network calls
+        List<CategoryResponse> categories = productClient.getAllCategories();
+        if (categories == null || categories.isEmpty()) {
+            throw new IllegalStateException("Category list is empty or null");
+        }
+
+        // Get risk tolerance and allocations using fetched categories
+        String riskTolerance = goal.getRiskTolerance();
+        List<PortfolioAllocation> allocations = getPortfolioAllocationByRiskTolerance(riskTolerance, categories);
+
+        // Map to hold recommended products per category
+        Map<String, List<RecommendedProduct>> recommendedProducts = new HashMap<>();
+
+        // Process each allocation and fetch the recommended products
+        for (PortfolioAllocation alloc : allocations) {
+            List<RecommendedProduct> products = getRecommendedProductsByCategoryId(alloc.getCategoryId());
+            recommendedProducts.put(alloc.getCategoryType(), products);
+        }
+
+        // Log audit trail
+        auditTrailsService.logsAuditTrails(
+                GeneralConstant.LOG_ACTIVITY_GET_SUGGESTED_PORTO,
+                mapper.writeValueAsString(goalId),
+                mapper.writeValueAsString(goalId),
+                "Get Suggested Portfolio"
+        );
+
+        // Return the final response
+        return SuggestedPortfolioResponse.builder()
+                .goalId(goalId)
+                .suggestedPortfolio(allocations)
+                .recommendedProducts(recommendedProducts)
+                .build();
+    }
+
+    // Fixed to accept category list as param (avoid double fetch)
+    private List<PortfolioAllocation> getPortfolioAllocationByRiskTolerance(String riskTolerance, List<CategoryResponse> categories) {
         return switch (riskTolerance) {
-            case "Aggressive" -> List.of(
-                    new PortfolioAllocation("Saham", 70),
-                    new PortfolioAllocation("Obligasi", 20),
-                    new PortfolioAllocation("Pasar Uang", 10)
-            );
-            case "Moderate" -> List.of(
-                    new PortfolioAllocation("Saham", 50),
-                    new PortfolioAllocation("Obligasi", 30),
-                    new PortfolioAllocation("Pasar Uang", 20)
-            );
-            case "Conservative" -> List.of(
-                    new PortfolioAllocation("Saham", 30),
-                    new PortfolioAllocation("Obligasi", 50),
-                    new PortfolioAllocation("Pasar Uang", 20)
-            );
+            case "Aggressive" -> getPortfolioAllocations(categories, this::getPercentageForAggressive);
+            case "Moderate" -> getPortfolioAllocations(categories, this::getPercentageForModerate);
+            case "Conservative" -> getPortfolioAllocations(categories, this::getPercentageForConservative);
             default -> throw new IllegalArgumentException("Unknown risk tolerance: " + riskTolerance);
+        };
+    }
+
+    // Reusable allocation generator
+    private List<PortfolioAllocation> getPortfolioAllocations(List<CategoryResponse> categories,
+                                                              Function<String, Integer> getPercentageFunction) {
+        return categories.stream()
+                .map(category -> {
+                    String categoryType = category.getCategoryType();
+                    Integer percentage = getPercentageFunction.apply(categoryType);
+                    if (percentage == null) {
+                        throw new IllegalArgumentException("Unknown category: " + categoryType);
+                    }
+                    return new PortfolioAllocation(
+                            categoryType,
+                            percentage,
+                            category.getCategoryId()
+                    );
+                })
+                .collect(Collectors.toList());
+    }
+
+    // Allocation percentage rules
+    private Integer getPercentageForAggressive(String categoryType) {
+        return switch (categoryType) {
+            case "Saham" -> 70;
+            case "Obligasi" -> 20;
+            case "Pasar Uang" -> 10;
+            default -> null;
+        };
+    }
+
+    private Integer getPercentageForModerate(String categoryType) {
+        return switch (categoryType) {
+            case "Saham" -> 50;
+            case "Obligasi" -> 30;
+            case "Pasar Uang" -> 20;
+            default -> null;
+        };
+    }
+
+    private Integer getPercentageForConservative(String categoryType) {
+        return switch (categoryType) {
+            case "Saham" -> 30;
+            case "Obligasi" -> 50;
+            case "Pasar Uang" -> 20;
+            default -> null;
         };
     }
 
@@ -402,6 +443,5 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
 
         financialGoalRepository.save(goal);
     }
-
 
 }
