@@ -8,6 +8,7 @@ import lombok.Data;
 @Builder
 @AllArgsConstructor
 public class PortfolioAllocation {
-    private String category;
+    private String categoryType;
     private Integer percentage;
+    private Long categoryId;
 }
