@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createGoal } from "../../services/goal/api";
+import "animate.css"; // Import animate.css for animations
 
 const CreateGoalPage: React.FC = () => {
   const navigate = useNavigate();
@@ -33,49 +34,52 @@ const CreateGoalPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-100 via-blue-200 to-indigo-300 flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-2xl bg-white/70 backdrop-blur-md p-10 rounded-3xl shadow-2xl border border-white/40 transition-all duration-500">
-        <h1 className="text-4xl font-extrabold text-gray-800 text-center mb-6 tracking-tight drop-shadow-sm">
-          🎯 Create Financial Goal
+    <div className="min-h-screen bg-gradient-to-br from-pink-100 via-purple-200 to-indigo-200 flex items-center justify-center px-4 py-10 animate__animated animate__fadeIn">
+      <div className="w-full max-w-md bg-white/80 backdrop-blur-md p-8 rounded-xl shadow-lg border border-white/60 transition-all duration-300 animate__animated animate__slideInDown">
+        <h1 className="text-3xl font-extrabold text-gray-800 text-center mb-6 tracking-tight drop-shadow-sm animate__animated animate__fadeIn">
+          ✨ Create Goal
         </h1>
 
         {error && (
-          <div className="bg-red-100 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm shadow-sm">
+          <div className="bg-red-100 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm shadow-sm animate__animated animate__shake">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 animate__animated animate__fadeIn animate__delay-1s"
+        >
           <div>
-            <label className="block text-gray-700 text-sm font-semibold mb-2">
-              📝 Target Goal
+            <label className="block text-gray-700 text-sm font-semibold mb-2 animate__animated animate__fadeIn">
+              🎯 Goal Name
             </label>
             <input
               type="text"
               value={goalName}
               onChange={(e) => setGoalName(e.target.value)}
               required
-              placeholder="Buying car, University funds, Travelling to Bali..."
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white/80 placeholder-gray-400"
+              placeholder="Dream Vacation, New Laptop, Down Payment..."
+              className="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-purple-400 focus:outline-none bg-white/90 placeholder-gray-400 animate__animated animate__slideInLeft"
             />
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-semibold mb-2">
-              💰 Target Value (Rp)
+            <label className="block text-gray-700 text-sm font-semibold mb-2 animate__animated animate__fadeIn">
+              💰 Target Amount (Rp)
             </label>
             <input
               type="number"
               value={targetAmount}
               onChange={(e) => setTargetAmount(Number(e.target.value))}
               required
-              placeholder="Contoh: 5000000"
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white/80 placeholder-gray-400"
+              placeholder="e.g., 1000000"
+              className="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-purple-400 focus:outline-none bg-white/90 placeholder-gray-400 animate__animated animate__slideInRight"
             />
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-semibold mb-2">
+            <label className="block text-gray-700 text-sm font-semibold mb-2 animate__animated animate__fadeIn">
               📅 Target Date
             </label>
             <input
@@ -83,19 +87,39 @@ const CreateGoalPage: React.FC = () => {
               value={targetDate}
               onChange={(e) => setTargetDate(e.target.value)}
               required
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white/80"
+              className="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-purple-400 focus:outline-none bg-white/90 animate__animated animate__slideInLeft"
             />
           </div>
 
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 ease-in-out shadow-md hover:shadow-xl disabled:opacity-60"
-            >
-              {loading ? "Saving..." : "🚀 Create Goal"}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-md font-semibold transition-all duration-200 ease-in-out shadow-md hover:shadow-lg disabled:opacity-60 animate__animated animate__fadeIn animate__delay-2s"
+          >
+            {loading ? (
+              <svg
+                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            ) : (
+              "🚀 Create Goal"
+            )}
+          </button>
         </form>
       </div>
     </div>
