@@ -1,0 +1,4 @@
+package com.financial_goal_service.app.advice;
+
+public class GlobalExceptionHandler {
+}

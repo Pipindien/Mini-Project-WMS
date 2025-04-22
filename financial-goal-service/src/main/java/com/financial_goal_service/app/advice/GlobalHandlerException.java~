@@ -1,0 +1,72 @@
+package com.financial_goal_service.app.advice;
+
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.financial_goal_service.app.advice.dto.ErrorResponse;
+import com.financial_goal_service.app.advice.exception.GoalNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+@RestControllerAdvice
+public class GlobalHandlerException {
+
+    private static final Logger logger = LoggerFactory.getLogger(GlobalHandlerException.class);
+
+    private ResponseEntity<ErrorResponse> buildErrorResponse(HttpStatus status, String error, String message) {
+        ErrorResponse response = new ErrorResponse(
+                status.value(),
+                error,
+                message,
+                new Date()
+        );
+        return new ResponseEntity<>(response, status);
+    }
+
+    @ExceptionHandler(GoalNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleGoalNotFoundException(GoalNotFoundException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Goal Not Found", ex.getMessage());
+    }
+
+    @ExceptionHandler(JsonProcessingException.class)
+    public ResponseEntity<ErrorResponse> handleJsonProcessingException(JsonProcessingException ex) {
+        logger.error("JSON processing error: ", ex);
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "JSON Processing Error", ex.getOriginalMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Invalid Argument", ex.getMessage());
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorResponse> handleRuntime(RuntimeException ex) {
+        logger.error("Unhandled exception:", ex);
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", ex.getMessage());
+    }
+
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+                errors.put(error.getField(), error.getDefaultMessage()));
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, String>> handleGeneralException(Exception ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "Unexpected error occurred");
+        error.put("message", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+}
