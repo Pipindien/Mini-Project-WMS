@@ -334,7 +334,7 @@ const GoalDetailPage: React.FC = () => {
                           state: {
                             productDetail: product,
                             goalId: portfolio.goalId,
-                            goalName: goal.goalName, // tambahkan ini
+                            goalName: goal?.goalName, // tambahkan ini
                           },
                         });
                       }}

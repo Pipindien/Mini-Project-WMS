@@ -89,13 +89,24 @@ const HomePortfolio: React.FC = () => {
 
   const handleDelete = async (goalId: string) => {
     const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Token not found");
+      return;
+    }
+
     try {
-      await archiveGoal(goalId, token!);
-      setGoals(goals.filter((goal) => goal.goalId !== goalId)); // Optimistic update for reactivity
+      await archiveGoal(goalId, token);
+
+      // ✅ Optimistic update
+      setGoals((prevGoals) =>
+        prevGoals.filter((goal) => goal.goalId !== Number(goalId))
+      );
     } catch (err) {
       console.error("Error archiving goal:", err);
       alert("Failed deleting the goal.");
-      fetchGoals(); // Re-fetch on error to ensure data consistency
+
+      // Optional: you can re-fetch to stay in sync
+      fetchGoals();
     }
   };
 

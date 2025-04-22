@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { getGoals } from "../../../services/goal/api";
+import { Goal } from "../../../services/goal/type";
 
 const useGoal = () => {
-  const [goals, setGoals] = useState<any[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [goalsLoading, setGoalsLoading] = useState<boolean>(true);
   const [goalsError, setGoalsError] = useState<string | null>(null);
 
@@ -13,12 +14,12 @@ const useGoal = () => {
 
       try {
         const data = await getGoals(token);
-        setGoals(data);
-        setGoalsLoading(false);
+        setGoals(data); // data now typed as Goal[]
       } catch (err) {
         setGoalsError("Gagal mengambil data tujuan keuangan.");
-        setGoalsLoading(false);
         console.error("Failed to fetch goals", err);
+      } finally {
+        setGoalsLoading(false);
       }
     };
 
