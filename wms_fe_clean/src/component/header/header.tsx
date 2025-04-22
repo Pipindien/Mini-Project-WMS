@@ -35,14 +35,8 @@ const Header: React.FC = () => {
                 to="/history"
                 className="hover:underline hover:text-gray-200 transition"
               >
-                Transaksi
+                Transaction
               </Link>
-              <a
-                href="#"
-                className="hover:underline hover:text-gray-200 transition"
-              >
-                Profile
-              </a>
             </>
           )}
 
