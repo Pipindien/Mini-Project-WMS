@@ -338,7 +338,7 @@ public class TransactionServiceImplementation implements TransactionService {
             }
 
 
-            FinancialGoalResponse goal = fingolClient.getFinancialGoalByIdWithOutDelete(trx.getGoalId(), token);
+            FinancialGoalResponse goal = fingolClient.getFinancialGoalById(trx.getGoalId(), token);
             if (goal != null) {
                 trx.setGoalName(goal.getGoalName());
             }

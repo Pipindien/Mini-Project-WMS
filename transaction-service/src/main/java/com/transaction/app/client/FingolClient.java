@@ -34,6 +34,9 @@ public class FingolClient {
     @Value("${financial-goal.urlGoalByIdCustomer}")
     private String fingolUrlGoalByIdCustomer;
 
+    @Value("${financial-goal.urlByIdWithOutDelete}")
+    private String fingolUrlGoalByIdWithOutDelete;
+
 
     public FinancialGoalResponse getFinansialGoalByName(FinancialGoalResponse financialGoalResponse, String token) {
         try {
@@ -134,10 +137,27 @@ public class FingolClient {
             );
 
             FinancialGoalResponse responseBody = responseEntity.getBody();
-
             return responseBody;
+    }
 
+    public FinancialGoalResponse getFinancialGoalByIdWithOutDelete(Long goalId, String token) {
 
+        String url = fingolUrlGoalByIdWithOutDelete.replace("{goalId}", String.valueOf(goalId));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("token", token);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        // Perform the API call to get the financial goal
+        ResponseEntity<FinancialGoalResponse> responseEntity = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                FinancialGoalResponse.class
+        );
+
+        FinancialGoalResponse responseBody = responseEntity.getBody();
+        return responseBody;
     }
 
 }

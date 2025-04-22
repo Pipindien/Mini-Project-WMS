@@ -25,6 +25,7 @@ financial-goal:
   url: http://localhost:7070/financial-goal/get/{goalName}
   urlUpdate: http://localhost:7070/financial-goal/{goalId}/update-progress
   urlById: http://localhost:7070/financial-goal/{goalId}
+  urlByIdWithOutDelete: http://localhost:7070/financial-goal/all/{goalId}
   urlGoalByIdCustomer: http://localhost:7070/financial-goal/
 
 gopay-transaction:
