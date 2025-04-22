@@ -205,7 +205,7 @@ const PortfolioRecommendation: React.FC = () => {
                   Harga: Rp{product.productPrice.toLocaleString()}
                 </p>
                 <p className="text-sm text-gray-500">
-                  Estimasi Return: {product.productRate.toFixed(2)}%
+                  Estimasi Return: {(product.productRate * 100).toFixed(2)}%
                 </p>
                 <p className="text-sm text-indigo-600 mt-3 underline font-medium">
                   Lihat Detail
