@@ -79,6 +79,7 @@ const BuyTransaction: React.FC = () => {
           </label>
           <input
             type="number"
+            min="1"
             className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={amount}
             onChange={(e) => setAmount(Number(e.target.value))}

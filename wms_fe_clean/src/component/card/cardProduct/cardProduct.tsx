@@ -9,7 +9,7 @@ const CardProduct: React.FC<CardProductProps> = ({ product }) => {
   const formatCurrency = (value: number) =>
     value.toLocaleString("id-ID", { style: "currency", currency: "IDR" });
 
-  const formatRate = (rate: number) => `${rate.toFixed(2)}%`;
+  const formatRate = (rate: number) => `${(rate * 100).toFixed(2)}%`;
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl transition duration-300 transform hover:-translate-y-1">

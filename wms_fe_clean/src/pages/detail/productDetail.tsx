@@ -12,7 +12,7 @@ const ProductDetail: React.FC = () => {
   const formatCurrency = (value: number) =>
     value.toLocaleString("id-ID", { style: "currency", currency: "IDR" });
 
-  const formatRate = (rate: number) => `${rate.toFixed(2)}%`;
+  const formatRate = (rate: number) => `${(rate * 100).toFixed(2)}%`;
   const {
     data,
     loading: simulating,
