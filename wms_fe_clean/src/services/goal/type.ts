@@ -14,7 +14,7 @@ export interface Goal {
 }
 
 export interface SuggestedPortfolioItem {
-  category: string;
+  categoryType: string;
   percentage: number;
 }
 
@@ -27,7 +27,7 @@ export interface Product {
 }
 
 export interface RecommendedProducts {
-  [category: string]: Product[]; // dynamic key: "Saham", "Obligasi", etc.
+  [categoryType: string]: Product[]; // dynamic key: "Saham", "Obligasi", etc.
 }
 
 export interface PortfolioRecommendationResponse {
