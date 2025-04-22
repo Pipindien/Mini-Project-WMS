@@ -24,4 +24,5 @@ public class Product {
     private Long categoryId;
     private Boolean isDeleted = false;
     private Date createdDate;
+    private Date updateDate;
 }

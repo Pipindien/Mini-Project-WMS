@@ -1,94 +1,96 @@
 import axios from "axios";
 import goalApi from "../api/goal";
 import transactionApi from "../api/transaction";
-import { Goal } from "./type";
+import { Goal, ApiResponse } from "./type";
 import { PortfolioRecommendationResponse } from "./type";
 
 export const getGoals = async (
   token: string,
   status?: string
 ): Promise<Goal[]> => {
-  const res = await goalApi.get("/financial-goal/", {
+  const res = await goalApi.get<ApiResponse<Goal[]>>("/financial-goal/", {
     headers: {
-      token: token,
+      token,
     },
     params: status ? { status } : {},
   });
 
-  return res.data;
+  return res.data.data;
 };
-
+// Get goal by ID
 export const getGoalById = async (
   goalId: string,
   token: string
 ): Promise<Goal> => {
-  const res = await goalApi.get(`/financial-goal/${goalId}`, {
-    headers: {
-      token: token,
-    },
-  });
+  const res = await goalApi.get<ApiResponse<Goal>>(
+    `/financial-goal/${goalId}`,
+    {
+      headers: { token },
+    }
+  );
 
-  return res.data;
+  return res.data.data; // ✅ ambil hanya data-nya
 };
 
+// Create goal
 export const createGoal = async (
   payload: { goalName: string; targetAmount: number; targetDate: string },
   token: string
 ): Promise<Goal> => {
   try {
-    // Send the POST request using your custom API wrapper (goalApi)
-    const res = await goalApi.post("/financial-goal/save", payload, {
-      headers: {
-        "Content-Type": "application/json", // Ensure content type is set
-        token: token, // Pass token in header
-      },
-    });
-    const data: Goal = res.data; // Access the response body directly
+    const res = await goalApi.post<ApiResponse<Goal>>(
+      "/financial-goal/save",
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          token,
+        },
+      }
+    );
 
-    return data; // Return the goal data
+    return res.data.data; // ✅ return hanya data goal-nya
   } catch (err) {
-    // Handle errors from Axios
     if (err instanceof axios.AxiosError) {
-      // Optional: log or re-throw custom error message based on status
       console.error("Error creating goal:", err.response?.data || err.message);
     }
     throw new Error("Failed to create goal");
   }
 };
 
+// Get suggested portfolio
 export const getSuggestedPortfolio = async (
   goalId: string,
   token: string
 ): Promise<PortfolioRecommendationResponse> => {
-  const res = await goalApi.get(
+  const res = await goalApi.get<ApiResponse<PortfolioRecommendationResponse>>(
     `/financial-goal/${goalId}/suggested-portfolio`,
     {
-      headers: {
-        token: token, // gunakan key `token` sesuai backend kamu
-      },
+      headers: { token },
     }
   );
 
-  return res.data;
+  return res.data.data; // ✅ ambil hanya data-nya
 };
 
+// Update goal
 export const updateGoal = async (
   goalId: string,
   token: string,
   goal: Partial<Goal>
-) => {
+): Promise<void> => {
   await goalApi.put(`/financial-goal/update/${goalId}`, goal, {
-    headers: {
-      token: token,
-    },
+    headers: { token },
   });
 };
 
-export const archiveGoal = async (goalId: string, token: string) => {
+// Archive goal
+export const archiveGoal = async (
+  goalId: string,
+  token: string
+): Promise<void> => {
   await goalApi.patch(`/financial-goal/archive/${goalId}`, null, {
-    headers: {
-      token: token,
-    },
+    headers: { token },
   });
 };
 

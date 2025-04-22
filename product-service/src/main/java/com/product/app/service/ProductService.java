@@ -169,6 +169,7 @@ public class ProductService {
             existingProduct.setProductPrice(productRequest.getProductPrice());
             existingProduct.setProductRate(productRequest.getProductRate());
             existingProduct.setCategoryId(category.getCategoryId());
+            existingProduct.setUpdateDate(new Date());
             existingProduct.setIsDeleted(false);
 
             Product updatedProduct = productRepository.save(existingProduct);
@@ -180,6 +181,7 @@ public class ProductService {
                     .productRate(updatedProduct.getProductRate())
                     .categoryId(updatedProduct.getCategoryId())
                     .createdDate(updatedProduct.getCreatedDate())
+                    .updateDate(updatedProduct.getUpdateDate())
                     .build();
 
             auditTrailsService.logsAuditTrails(

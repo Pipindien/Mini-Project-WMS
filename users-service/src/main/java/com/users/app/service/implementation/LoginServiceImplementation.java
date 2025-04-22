@@ -54,6 +54,7 @@ public class LoginServiceImplementation implements LoginService {
                     .salary(loginRequest.getSalary())
                     .username(loginRequest.getUsername())
                     .password(passwordEncoder.encode(loginRequest.getPassword()))
+                    .createdDate(new Date())
                     .role("USER")
                     .build();
 

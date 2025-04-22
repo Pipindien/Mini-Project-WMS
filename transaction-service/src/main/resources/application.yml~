@@ -1,0 +1,35 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/db_transaction
+    username: postgres
+    password: admin
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+audit-trails:
+  url: http://localhost:8080/audit-trails/save
+
+auth-validate-token:
+  url: http://localhost:8080/auth/
+
+product :
+  url: http://localhost:8082/product/{productName}
+  urlById: http://localhost:8082/product/get/{productId}
+
+financial-goal:
+  url: http://localhost:7070/financial-goal/get/{goalName}
+  urlUpdate: http://localhost:7070/financial-goal/{goalId}/update-progress
+  urlById: http://localhost:7070/financial-goal/{goalId}
+  urlByIdWithOutDelete: http://localhost:7070/financial-goal/all/{goalId}
+  urlGoalByIdCustomer: http://localhost:7070/financial-goal/
+
+gopay-transaction:
+  url: https://private-190325-gopay2.apiary-mock.com//payment-transaction
+
+gopay-status:
+  url: https://private-190325-gopay2.apiary-mock.com//payment-status

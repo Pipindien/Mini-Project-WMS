@@ -4,7 +4,7 @@ import { buyTransaction } from "../../services/transaction/api";
 import { BuyTransactionRequest } from "../../services/transaction/type";
 import useProductById from "../hooks/useProduct/useProductById";
 import useGoal from "../hooks/useGoal/useGoal";
-import "animate.css"; // Import animate.css for animations
+import "animate.css";
 
 const BuyTransaction: React.FC = () => {
   const { id } = useParams();
@@ -33,11 +33,22 @@ const BuyTransaction: React.FC = () => {
       return;
     }
 
+    const units = Math.floor(amount / product.productPrice);
+
+    if (units < 1) {
+      setSubmitError(
+        "Jumlah dana tidak cukup untuk membeli minimal 1 unit produk."
+      );
+      return;
+    }
+
+    const finalAmount = units * product.productPrice;
+
     const request: BuyTransactionRequest = {
-      amount,
+      amount: finalAmount,
       productName: product.productName,
       goalName,
-      notes,
+      notes: `${notes} (dibulatkan untuk ${units} unit)`,
     };
 
     try {
@@ -72,6 +83,8 @@ const BuyTransaction: React.FC = () => {
       </div>
     );
 
+  const calculatedUnits = Math.floor(amount / product.productPrice);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-200 via-blue-300 to-indigo-200 flex items-center justify-center px-4 py-10 animate__animated animate__fadeIn">
       <div className="w-full max-w-md bg-white/80 backdrop-blur-md p-8 rounded-xl shadow-lg border border-white/60 transition-all duration-300 animate__animated animate__slideInDown">
@@ -104,10 +117,18 @@ const BuyTransaction: React.FC = () => {
               min="1"
               className="w-full border border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white/90 placeholder-gray-400 animate__animated animate__slideInRight"
               value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
+              onChange={(e) => {
+                setAmount(Number(e.target.value));
+                setSubmitError(null);
+              }}
               required
               placeholder="Masukkan nominal dana"
             />
+            {amount > 0 && (
+              <p className="text-sm text-gray-600 mt-1">
+                Dapat membeli <strong>{calculatedUnits}</strong> unit
+              </p>
+            )}
           </div>
 
           <div>

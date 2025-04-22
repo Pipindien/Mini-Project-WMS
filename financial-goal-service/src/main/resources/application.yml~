@@ -1,0 +1,18 @@
+server:
+  port: 7070
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/db_financial_goal
+    username: postgres
+    password: admin
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+audit-trails:
+  url: http://localhost:8080/audit-trails/save
+auth-validate-token:
+  url: http://localhost:8080/auth/
+product-service:
+  url: http://localhost:8082/product/category/{categoryId}
+  urlAllCategory: http://localhost:8082/category
