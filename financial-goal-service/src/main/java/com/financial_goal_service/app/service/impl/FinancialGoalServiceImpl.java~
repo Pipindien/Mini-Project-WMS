@@ -168,9 +168,9 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
     }
 
     @Override
-    public FinancialGoalResponse getAllGoals(Long goalId, String token) throws JsonProcessingException {
+    public FinancialGoalResponse getGoalByGoalIdWithOutDeleted(Long goalId, String token) throws JsonProcessingException {
 
-        Optional<FinancialGoal> goalOpt = financialGoalRepository.findAllByGoalId(goalId);
+        Optional<FinancialGoal> goalOpt = financialGoalRepository.findByGoalIdWithOutDeleted(goalId);
         if (goalOpt.isPresent()) {
 
             FinancialGoal goal = goalOpt.get();

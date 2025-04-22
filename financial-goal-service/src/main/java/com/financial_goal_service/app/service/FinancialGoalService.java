@@ -24,7 +24,7 @@ public interface FinancialGoalService {
 
     FinancialGoalResponse getGoalByName(String goalName, String token) throws JsonProcessingException;
 
-
+FinancialGoalResponse getAllGoals(Long goalId, String token) throws JsonProcessingException;
     void updateProgress(Long goalId, UpdateProgressRequest request) throws JsonProcessingException;
 
 

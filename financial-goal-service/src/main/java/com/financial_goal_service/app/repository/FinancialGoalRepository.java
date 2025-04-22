@@ -17,6 +17,9 @@ public interface FinancialGoalRepository extends JpaRepository<FinancialGoal, Lo
     @Query("SELECT fg FROM FinancialGoal fg WHERE fg.goalId = :goalId AND fg.deleted = false")
     Optional<FinancialGoal> findByGoalId(@Param("goalId") Long goalId);
 
+    Optional<FinancialGoal> findAllByGoalId(Long goalId);
+
+
     @Query("SELECT fg FROM FinancialGoal fg WHERE fg.goalName = :goalName AND fg.deleted = false")
     Optional<FinancialGoal> findByGoalName(@Param("goalName") String goalName);
 

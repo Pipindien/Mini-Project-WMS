@@ -56,6 +56,15 @@ public class FinancialGoalController {
         return ResponseEntity.ok(goal);
     }
 
+    @GetMapping("/all/{goalId}")
+    public ResponseEntity<FinancialGoalResponse> getAllGoals(
+            @PathVariable Long goalId,
+            @RequestHeader String token
+    ) throws JsonProcessingException {
+        FinancialGoalResponse goal = financialGoalService.getAllGoals(goalId, token);
+        return ResponseEntity.ok(goal);
+    }
+
     @PatchMapping(RestApiPath.FINANCIALGOAL_ARCHIVE)
     public ResponseEntity<String> archiveGoal(@PathVariable Long goalId) throws JsonProcessingException {
         String message = financialGoalService.archiveGoal(goalId);
