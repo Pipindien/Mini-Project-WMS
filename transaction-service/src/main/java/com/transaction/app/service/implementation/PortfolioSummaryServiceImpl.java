@@ -76,15 +76,16 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
         double totalEstimatedReturn = 0.0;
 
         for (Transaction transaction : transactions) {
+            if (transaction.getLot() <= 0) continue;
+
             ProductResponse product = productClient.getProductById(transaction.getProductId());
             if (product == null) continue;
 
-            double productPrice = product.getProductPrice(); // ✅ harga ambil dari client
+            double productPrice = product.getProductPrice();
             double investmentAmount = productPrice * transaction.getLot();
             int nDays = (int) DateHelper.calculateDayDiff(transaction.getCreatedDate(), LocalDate.now());
 
             double dailyRate = Math.pow(1 + product.getProductRate(), 1.0 / 30) - 1;
-
             double multiplier = Math.pow(1 + dailyRate, nDays);
 
             double estimatedReturn = investmentAmount * multiplier;
@@ -97,7 +98,7 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
                     .productName(product.getProductName())
                     .productCategory(product.getProductCategory())
                     .lot(transaction.getLot())
-                    .buyPrice(productPrice) // ✅ harga dari client
+                    .buyPrice(productPrice)
                     .productRate(product.getProductRate())
                     .investmentAmount(investmentAmount)
                     .estimatedReturn(estimatedReturn)
@@ -110,6 +111,7 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
             totalInvestment += investmentAmount;
             totalEstimatedReturn += estimatedReturn;
         }
+
 
         summary.setTotalInvestment(totalInvestment);
         summary.setEstimatedReturn(totalEstimatedReturn);
@@ -236,6 +238,7 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
         PortfolioSummary summary = optional.get();
 
         List<PortfolioProductDetailResponse> detailResponses = summary.getProductDetails().stream()
+                .filter(detail -> detail.getLot() != null && detail.getLot() > 0)
                 .map(detail -> PortfolioProductDetailResponse.builder()
                         .productId(detail.getProductId())
                         .productName(detail.getProductName())
