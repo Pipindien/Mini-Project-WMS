@@ -1,0 +1,170 @@
+package com.financial_goal_service.app.service.impl;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.financial_goal_service.app.client.AuthClientService;
+import com.financial_goal_service.app.client.ProductClient;
+import com.financial_goal_service.app.client.dto.UsersResponse;
+import com.financial_goal_service.app.dto.*;
+import com.financial_goal_service.app.entity.FinancialGoal;
+import com.financial_goal_service.app.repository.FinancialGoalRepository;
+import com.financial_goal_service.app.service.AuditTrailsService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Optional;
+
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+@ExtendWith(MockitoExtension.class)
+class FinancialGoalServiceImplTest {
+
+    @InjectMocks
+    private FinancialGoalServiceImpl financialGoalService;
+
+    @Mock
+    private FinancialGoalRepository financialGoalRepository;
+
+    @Mock
+    private AuditTrailsService auditTrailsService;
+
+    @Mock
+    private AuthClientService authClientService;
+
+    @Mock
+    private ProductClient productClient;
+
+    @Mock
+    private UsersResponse userProfile;
+    @Mock
+    private FinancialGoal goal;
+
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+
+        // Mocking UsersResponse yang biasa digunakan di FinancialGoalServiceImpl
+        userProfile = UsersResponse.builder()
+                .custId(1L)
+                .age(25)
+                .salary(15_000_000.0)
+                .build();
+
+        goal = new FinancialGoal();
+        goal.setGoalId(1L);
+        goal.setGoalName("Beli Rumah");
+        goal.setTargetAmount(5.0E8);
+        goal.setTargetDate(new Date());
+        goal.setRiskTolerance("Aggressive");
+        goal.setCurrentAmount(0.0);
+        goal.setStatus("Active");
+        goal.setCustId(1L);
+        goal.setInsightMessage("Kamu sudah punya tujuan yang jelas! Yuk mulai investasi pertamamu untuk mencapainya.");
+
+/*        Mockito.when(financialGoalRepository.findByCustIdAndStatus(1L, "Active")).thenReturn(Arrays.asList(goal));
+        Mockito.when(authClientService.getUserProfileFromToken(anyString())).thenReturn(userProfile);*/
+    }
+
+    @Test
+    void testSaveFinancialGoal_shouldReturnCorrectResponse() throws JsonProcessingException {
+
+        String token = "mockToken";
+        when(authClientService.getUserProfileFromToken(token)).thenReturn(userProfile);
+
+        FinancialGoalRequest request = FinancialGoalRequest.builder()
+                .goalName("Beli Rumah")
+                .targetAmount(500_000_000.0)
+                .targetDate(new Date())
+                .build();
+
+        FinancialGoal savedEntity = new FinancialGoal();
+        savedEntity.setGoalId(1L);
+        savedEntity.setGoalName(request.getGoalName());
+        savedEntity.setTargetAmount(request.getTargetAmount());
+        savedEntity.setTargetDate(request.getTargetDate());
+        savedEntity.setRiskTolerance("Aggressive");
+        savedEntity.setCreatedDate(new Date());
+        savedEntity.setDeleted(false);
+        savedEntity.setStatus("Active");
+        savedEntity.setCurrentAmount(0.0);
+        savedEntity.setCustId(userProfile.getCustId());
+        savedEntity.setInsightMessage("Kamu sudah punya tujuan yang jelas! Yuk mulai investasi pertamamu untuk mencapainya.");
+
+        when(financialGoalRepository.save(any(FinancialGoal.class))).thenReturn(savedEntity);
+
+        FinancialGoalResponse response = financialGoalService.saveFinancialGoal(request, token);
+
+        assertNotNull(response);
+        assertEquals("Beli Rumah", response.getGoalName());
+        assertEquals(500_000_000.0, response.getTargetAmount());
+        assertEquals("Aggressive", response.getRiskTolerance());
+        assertEquals(0.0, response.getCurrentAmount());
+        assertEquals("Active", response.getStatus());
+
+        // Verify audit logging
+        verify(auditTrailsService).logsAuditTrails(
+                eq("Save Financial Goal"),
+                anyString(),
+                anyString(),
+                eq("Create Financial Goal")
+        );
+
+        verify(financialGoalRepository).save(any(FinancialGoal.class));
+    }
+
+    @Test
+    void testGetGoalById_shouldReturnGoalResponse() throws JsonProcessingException {
+        when(financialGoalRepository.findByGoalId(1L)).thenReturn(Optional.of(goal));
+
+        FinancialGoalResponse response = financialGoalService.getGoalById(1L, "mockToken");
+
+        assertNotNull(response);
+        assertEquals(1L, response.getGoalId());
+        assertEquals("Beli Rumah", response.getGoalName());
+        assertEquals(5.0E8, response.getTargetAmount());
+        assertEquals("Aggressive", response.getRiskTolerance());
+    }
+
+    @Test
+    void testGetGoalById_shouldThrowExceptionIfGoalNotFound() {
+        when(financialGoalRepository.findByGoalId(1L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> financialGoalService.getGoalById(1L, "mockToken"));
+    }
+
+    @Test
+    void testArchiveGoal_shouldReturnSuccessMessage() throws JsonProcessingException {
+        when(financialGoalRepository.findByGoalId(1L)).thenReturn(Optional.of(goal));
+
+        String responseMessage = financialGoalService.archiveGoal(1L);
+
+        assertEquals("Goal Archived Successfully", responseMessage);
+
+        verify(financialGoalRepository).save(goal);
+    }
+
+    @Test
+    void testArchiveGoal_shouldThrowExceptionIfGoalNotFound() {
+        when(financialGoalRepository.findByGoalId(1L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> financialGoalService.archiveGoal(1L));
+    }
+
+    @Test
+    void testDetermineRiskTolerance_shouldReturnCorrectRisk() {
+        String riskTolerance = financialGoalService.determineRiskTolerance(25, 15_000_000.0);
+
+        assertEquals("Aggressive", riskTolerance);
+    }
+}
