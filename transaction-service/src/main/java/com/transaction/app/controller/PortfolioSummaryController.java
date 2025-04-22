@@ -31,7 +31,10 @@ public class PortfolioSummaryController {
 
     @GetMapping("/dashboard/{goalId}")
     public ResponseEntity<PortfolioSummaryResponse> getPortfolioDashboardByGoalId(@RequestHeader String token, @PathVariable Long goalId) throws JsonProcessingException {
+        portfolioSummaryService.upsertPortfolioSummary(goalId, token);
+        portfolioSummaryService.updateProgress(goalId, token);
         PortfolioSummaryResponse response = portfolioSummaryService.getPortfolioDetail(token, goalId);
         return ResponseEntity.ok(response);
     }
+
 }
