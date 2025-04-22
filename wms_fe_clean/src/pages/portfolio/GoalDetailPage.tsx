@@ -34,7 +34,7 @@ const GoalDetailPageEmptyState: React.FC = () => {
         </div>
         <p className="text-gray-600 text-center">
           It seems you haven't started investing for this goal. Once you make
-          your first investment, your portfolio details will show up here.
+          your first investment, your portfolio details will show up here. Start investing now by returning to the dashboard below!
         </p>
         <button
           className="mt-6 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 px-6 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 transition-colors duration-200"
@@ -42,7 +42,7 @@ const GoalDetailPageEmptyState: React.FC = () => {
             navigate("/dashboard"); // Example: Navigate to the main dashboard or investment options
           }}
         >
-          Go to Dashboard
+          Return Dashboard
         </button>
       </div>
     </div>
@@ -74,7 +74,7 @@ const GoalDetailPage: React.FC = () => {
       } catch (err) {
         console.error("Error:", err);
         setError(
-          "It seems you haven't started investing for this goal. Once you make your first investment, your portfolio details will show up here."
+          "It seems you haven't started investing for this goal. Once you make your first investment, your portfolio details will show up here. Start investing now by returning to the dashboard below!"
         );
       } finally {
         setLoading(false);

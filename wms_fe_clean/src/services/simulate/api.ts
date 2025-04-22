@@ -22,7 +22,7 @@ export const createSimulateProduct = async (
     );
     return res.data;
   } catch {
-    throw new Error("Gagal melakukan simulasi produk");
+    throw new Error("Failed to simulate product");
   }
 };
 
@@ -43,7 +43,7 @@ export const createSimulateGoal = async (
     console.log("Simulation result:", res.data); // ⬅️ Tambah ini
     return res.data;
   } catch {
-    throw new Error("Gagal melakukan simulasi goal");
+    throw new Error("Failed to simulate product");
     console.error("Simulate error:", Error); // ⬅️ Tambah ini
   }
 };
