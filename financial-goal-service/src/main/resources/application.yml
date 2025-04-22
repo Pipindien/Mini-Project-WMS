@@ -15,3 +15,4 @@ auth-validate-token:
   url: http://localhost:8080/auth/
 product-service:
   url: http://localhost:8082/product/category/{categoryId}
+  urlAllCategory: http://localhost:8082/category

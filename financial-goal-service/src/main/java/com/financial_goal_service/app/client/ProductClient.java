@@ -1,5 +1,6 @@
 package com.financial_goal_service.app.client;
 
+import com.financial_goal_service.app.client.dto.CategoryResponse;
 import com.financial_goal_service.app.client.dto.ProductResponse;
 import com.financial_goal_service.app.client.dto.UsersResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,9 @@ public class ProductClient {
     @Value("${product-service.url}")
     private String productUrl;
 
+    @Value("${product-service.urlAllCategory}")
+    private String categoryGetAllCategory;
+
     public List<ProductResponse> getProductByCategoryId (Long categoryId) {
         String url = UriComponentsBuilder.fromUriString(productUrl)
                 .buildAndExpand(categoryId)
@@ -44,6 +48,28 @@ public class ProductClient {
         } catch (Exception e) {
             System.err.println("Error saat memanggil API Product: " + e.getMessage());
             return null;
+        }
+    }
+
+    public List<CategoryResponse> getAllCategories() {
+        String url = UriComponentsBuilder.fromUriString(categoryGetAllCategory) // e.g., "http://product-service/api/categories"
+                .toUriString();
+
+        System.out.println("Memanggil API categories: " + url);
+
+        try {
+            ResponseEntity<CategoryResponse[]> response = restTemplate.getForEntity(url, CategoryResponse[].class);
+            CategoryResponse[] body = response.getBody();
+
+            if (body == null || body.length == 0) {
+                System.out.println("Tidak ada kategori ditemukan.");
+                return List.of();
+            }
+
+            return Arrays.asList(body);
+        } catch (Exception e) {
+            System.err.println("Error saat memanggil API kategori: " + e.getMessage());
+            return List.of(); // avoid null
         }
     }
 }
