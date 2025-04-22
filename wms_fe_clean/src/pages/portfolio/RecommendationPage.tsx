@@ -33,6 +33,7 @@ const renderCustomizedLabel = ({
   midAngle,
   innerRadius,
   outerRadius,
+
   name,
 }: any) => {
   const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
@@ -82,7 +83,7 @@ const PortfolioRecommendation: React.FC = () => {
   }, [goalId]);
 
   const handleSegmentClick = (data: any) => {
-    setSelectedCategory(data.category);
+    setSelectedCategory(data.categoryType);
   };
 
   const formattedDate = goal?.targetDate
@@ -154,7 +155,7 @@ const PortfolioRecommendation: React.FC = () => {
             <Pie
               data={recommendation?.suggestedPortfolio}
               dataKey="percentage"
-              nameKey="category"
+              nameKey="categoryType"
               cx="50%"
               cy="50%"
               outerRadius={110}
@@ -173,7 +174,10 @@ const PortfolioRecommendation: React.FC = () => {
                   />
                 )
               )}
-              <LabelList dataKey="category" content={renderCustomizedLabel} />
+              <LabelList
+                dataKey="categoryType"
+                content={renderCustomizedLabel}
+              />
             </Pie>
             <Tooltip formatter={(value: any) => `${value}%`} />
           </PieChart>
