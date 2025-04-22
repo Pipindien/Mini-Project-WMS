@@ -1,15 +1,13 @@
 package com.transaction.app.client;
 
 import com.transaction.app.client.dto.FinancialGoalResponse;
+import com.transaction.app.client.dto.RestApiResponse;
 import com.transaction.app.client.dto.UpdateProgressRequest;
 import com.transaction.app.dto.insight.InsightResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -96,48 +94,31 @@ public class FingolClient {
         }
     }
 
-    public List<FinancialGoalResponse> getGoalsByCustId(String token) {
-        try {
-            String url = fingolUrlGoalByIdCustomer;
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("token", token);
-            HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-            ResponseEntity<List<FinancialGoalResponse>> responseEntity = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    entity,
-                    new ParameterizedTypeReference<List<FinancialGoalResponse>>() {}
-            );
-
-            return responseEntity.getBody();
-
-        } catch (Exception e) {
-            System.err.println("Error saat memanggil API Financial Goal List: " + e.getMessage());
-            return Collections.emptyList(); // return list kosong kalau gagal
-        }
-    }
-
 
     public FinancialGoalResponse getFinancialGoalById(Long goalId, String token) {
+        String url = fingolUrlById.replace("{goalId}", String.valueOf(goalId));
 
-            String url = fingolUrlById.replace("{goalId}", String.valueOf(goalId));
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("token", token);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("token", token);
-            HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-            // Perform the API call to get the financial goal
-            ResponseEntity<FinancialGoalResponse> responseEntity = restTemplate.exchange(
+        try {
+            ResponseEntity<RestApiResponse<FinancialGoalResponse>> responseEntity = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    FinancialGoalResponse.class
+                    new ParameterizedTypeReference<RestApiResponse<FinancialGoalResponse>>() {}
             );
 
-            FinancialGoalResponse responseBody = responseEntity.getBody();
-            return responseBody;
+            if (responseEntity.getStatusCode() == HttpStatus.OK) {
+                return responseEntity.getBody().getData();
+            } else {
+                throw new RuntimeException("Failed to get financial goal, status: " + responseEntity.getStatusCode());
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error while calling financial goal service: " + e.getMessage(), e);
+        }
     }
 
     public FinancialGoalResponse getFinancialGoalByIdWithOutDelete(Long goalId, String token) {
