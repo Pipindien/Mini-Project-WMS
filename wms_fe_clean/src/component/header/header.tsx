@@ -1,21 +1,36 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
 
 const Header: React.FC = () => {
-  const user = localStorage.getItem("user");
-  const role = user ? JSON.parse(user).role : null;
+  const [role, setRole] = useState<string | null>(() => {
+    const user = localStorage.getItem("user");
+    return user ? JSON.parse(user).role : null;
+  });
+
   const navigate = useNavigate();
 
   const handleLogout = () => {
     localStorage.clear();
+    setRole(null);
     navigate("/", { replace: true });
   };
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const updatedUser = localStorage.getItem("user");
+      setRole(updatedUser ? JSON.parse(updatedUser).role : null);
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
   return (
     <header className="bg-gradient-to-r from-indigo-600 to-purple-600 shadow-md py-4 px-6">
       <div className="container mx-auto flex justify-between items-center">
-        {/* Logo as Link to /information */}
         <Link
           to="/information"
           className="text-white text-2xl font-bold tracking-wide"
@@ -23,31 +38,30 @@ const Header: React.FC = () => {
           WealthScape
         </Link>
 
-        <nav className="flex items-center space-x-6 text-white text-sm font-medium">
+        <nav className="flex items-center space-x-4 text-white text-sm font-medium">
           {role === "USER" && (
             <>
               <Link
                 to="/dashboard"
-                className="hover:underline hover:text-gray-200 transition"
+                className="relative px-3 py-1 rounded-md transition-all duration-200 hover:bg-white/20 hover:scale-105 hover:shadow-md"
               >
                 Dashboard
               </Link>
               <Link
                 to="/portfolio"
-                className="hover:underline hover:text-gray-200 transition"
+                className="relative px-3 py-1 rounded-md transition-all duration-200 hover:bg-white/20 hover:scale-105 hover:shadow-md"
               >
                 Portfolio
               </Link>
               <Link
                 to="/history"
-                className="hover:underline hover:text-gray-200 transition"
+                className="relative px-3 py-1 rounded-md transition-all duration-200 hover:bg-white/20 hover:scale-105 hover:shadow-md"
               >
                 Transaction
               </Link>
             </>
           )}
 
-          {/* Logout Button */}
           {role && (
             <button
               onClick={handleLogout}
