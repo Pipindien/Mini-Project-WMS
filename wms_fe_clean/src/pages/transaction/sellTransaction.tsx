@@ -29,6 +29,8 @@ const SellTransaction: React.FC = () => {
   const [lot, setLot] = useState<number>(1);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [isSelling, setIsSelling] = useState<boolean>(false);
+  const [estimatedAmount, setEstimatedAmount] = useState<number | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
 
   const handleSell = async () => {
     if (!productDetail || goalId === undefined) {
@@ -50,14 +52,25 @@ const SellTransaction: React.FC = () => {
     const requestPayload: SellTransactionRequest = {
       productName: productDetail.productName,
       lot: lot,
-      goalId: Number(goalId), // tetap kirim goalId
+      goalId: Number(goalId),
     };
 
     try {
       setIsSelling(true);
-      await sellProduct(requestPayload, token);
-      toast.success("Transaksi penjualan berhasil!");
-      setTimeout(() => navigate("/portfolio"), 1500);
+      const response = await sellProduct(requestPayload, token);
+
+      const totalAmount = response.reduce(
+        (sum: number, trx: any) => sum + trx.amount,
+        0
+      );
+      setEstimatedAmount(totalAmount);
+
+      // Tampilkan modal sukses dan tunggu 5 detik sebelum redirect
+      setShowSuccessModal(true);
+      setTimeout(() => {
+        setShowSuccessModal(false);
+        navigate("/portfolio");
+      }, 5000);
     } catch (err: any) {
       const errorMessage =
         err.response?.data?.message ||
@@ -157,7 +170,7 @@ const SellTransaction: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Modal Konfirmasi */}
       {showModal && (
         <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/50 backdrop-blur-sm">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
@@ -192,7 +205,27 @@ const SellTransaction: React.FC = () => {
         </div>
       )}
 
-      {/* Spinner */}
+      {/* Modal Transaksi Berhasil */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white p-6 rounded-xl shadow-xl text-center w-full max-w-sm animate-fade-in">
+            <h2 className="text-2xl font-bold text-green-600 mb-2">
+              Transaksi Berhasil
+            </h2>
+            <p className="text-gray-700 text-sm mb-3">
+              Kamu berhasil menjual{" "}
+              <span className="font-semibold">{productDetail.productName}</span>
+              <br />
+              Lot: <span className="font-medium">{lot}</span>
+            </p>
+            <p className="text-indigo-700 font-semibold text-lg">
+              Estimasi Pendapatan: {formatCurrency(estimatedAmount || 0)}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Spinner saat loading */}
       {isSelling && (
         <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/30 backdrop-blur-sm">
           <FaSpinner className="animate-spin text-white text-4xl" />

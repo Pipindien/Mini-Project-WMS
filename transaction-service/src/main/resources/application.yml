@@ -5,17 +5,17 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/db_transaction
     username: postgres
-    password: gearsley
+    password: admin
 
     hibernate:
       ddl-auto: update
     show-sql: true
 
 audit-trails:
-  url: http://localhost:8181/audit-trails/save
+  url: http://localhost:8080/audit-trails/save
 
 auth-validate-token:
-  url: http://localhost:8181/auth/
+  url: http://localhost:8080/auth/
 
 product:
   url: http://localhost:8082/product/{productName}

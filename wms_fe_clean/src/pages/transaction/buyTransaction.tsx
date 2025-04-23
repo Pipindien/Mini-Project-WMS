@@ -29,32 +29,20 @@ const BuyTransaction: React.FC = () => {
 
     const token = localStorage.getItem("token");
     if (!token) {
-      setSubmitError("TToken not found. Please login again");
+      setSubmitError("Token not found. Please login again");
       return;
     }
-
-    const units = Math.floor(amount / product.productPrice);
-
-    if (units < 1) {
-      setSubmitError(
-        "The amount of funds is not sufficient to purchase at least 1 unit of product."
-      );
-      return;
-    }
-
-    const finalAmount = units * product.productPrice;
 
     const request: BuyTransactionRequest = {
-      amount: finalAmount,
+      amount,
       productName: product.productName,
       goalName,
-      notes: `${notes} (rounded up to ${units} unit)`,
+      notes,
     };
 
     try {
       const response = await buyTransaction(request, token);
-      const trxNumber = response.trxNumber;
-      navigate(`/payment/${trxNumber}`);
+      navigate(`/payment/${response.trxNumber}`);
     } catch (err) {
       setSubmitError("Failed to make transaction");
     }
@@ -126,7 +114,7 @@ const BuyTransaction: React.FC = () => {
             />
             {amount > 0 && (
               <p className="text-sm text-gray-600 mt-1">
-                Dapat membeli <strong>{calculatedUnits}</strong> unit
+                Estimasi dapat membeli <strong>{calculatedUnits}</strong> unit
               </p>
             )}
           </div>

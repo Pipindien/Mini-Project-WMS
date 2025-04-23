@@ -22,6 +22,7 @@ import com.transaction.app.repository.TransactionRepository;
 import com.transaction.app.service.AuditTrailsService;
 import com.transaction.app.service.TransactionService;
 import com.transaction.app.utility.DateHelper;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -70,17 +71,27 @@ public class TransactionServiceImplementation implements TransactionService {
             throw new ProductNotFoundException("Product tidak ditemukan: " + transactionRequest.getProductName());
         }
 
-        FinancialGoalResponse financialGoalResponse = new FinancialGoalResponse();
-        financialGoalResponse.setGoalName(transactionRequest.getGoalName());
+        if (productResponse.getProductPrice() == null || productResponse.getProductPrice() <= 0) {
+            throw new InvalidProductPriceException("Harga produk tidak valid.");
+        }
 
-        FinancialGoalResponse financialGoalRequest = fingolClient.getFinansialGoalByName(financialGoalResponse, token);
+        FinancialGoalResponse financialGoalRequest = new FinancialGoalResponse();
+        financialGoalRequest.setGoalName(transactionRequest.getGoalName());
 
-        if (financialGoalRequest == null || !financialGoalRequest.getCustId().equals(custId)) {
+        FinancialGoalResponse financialGoalResponse = fingolClient.getFinansialGoalByName(financialGoalRequest, token);
+        if (financialGoalResponse == null || !financialGoalResponse.getCustId().equals(custId)) {
             throw new GoalNotFoundException("Financial Goal tidak ditemukan atau bukan milik user: " + transactionRequest.getGoalName());
         }
 
+        int lot = (int) (transactionRequest.getAmount() / productResponse.getProductPrice());
+        if (lot < 1) {
+            throw new InvalidTransactionAmountException("Dana tidak cukup untuk membeli minimal 1 unit produk.");
+        }
+
+        Double finalAmount = lot * productResponse.getProductPrice();
+
         GopayResponse gopayResponse = new GopayResponse();
-        gopayResponse.setAmount(transactionRequest.getAmount());
+        gopayResponse.setAmount(finalAmount);
         gopayResponse.setStatus(transactionRequest.getStatus());
 
         GopayResponse gopayRequest = gopayClient.getGopayTransaction(gopayResponse);
@@ -92,16 +103,14 @@ public class TransactionServiceImplementation implements TransactionService {
                 "Insert Transaction Into Gopay Transaction"
         );
 
-        int lot = (int) (transactionRequest.getAmount() / productResponse.getProductPrice());
-
         Transaction transaction = new Transaction();
         transaction.setTrxNumber("TRX-" + UUID.randomUUID().toString());
         transaction.setStatus(gopayRequest.getStatus());
-        transaction.setAmount(transactionRequest.getAmount());
+        transaction.setAmount(finalAmount);
         transaction.setCustId(custId);
         transaction.setProductId(productResponse.getProductId());
         transaction.setLot(lot);
-        transaction.setGoalId(financialGoalRequest.getGoalId());
+        transaction.setGoalId(financialGoalResponse.getGoalId());
         transaction.setCreatedDate(new Date());
 
         Transaction savedTransaction = transactionRepository.save(transaction);
@@ -110,24 +119,30 @@ public class TransactionServiceImplementation implements TransactionService {
         transactionHistory.setStatus(gopayRequest.getStatus());
         transactionHistory.setCustId(custId);
         transactionHistory.setProductId(productResponse.getProductId());
-        transactionHistory.setAmount(transactionRequest.getAmount());
+        transactionHistory.setAmount(finalAmount);
         transactionHistory.setCreatedDate(new Date());
-        transactionHistory.setNotes(transactionRequest.getNotes());
+
+        String notes = transactionRequest.getNotes();
+        if (notes == null || notes.isEmpty()) {
+            notes = "Transaksi dilakukan (dibulatkan ke " + lot + " unit)";
+        }
+        transactionHistory.setNotes(notes);
+
         transactionHistory.setTransaction(savedTransaction);
         transactionHistory.setLot(lot);
-        transactionHistory.setGoalId(financialGoalRequest.getGoalId());
+        transactionHistory.setGoalId(financialGoalResponse.getGoalId());
 
         transactionHistoryRepository.save(transactionHistory);
 
         TransactionResponse response = TransactionResponse.builder()
                 .trxNumber(savedTransaction.getTrxNumber())
                 .status(savedTransaction.getStatus())
-                .amount(savedTransaction.getAmount())
+                .amount(finalAmount)
                 .custId(savedTransaction.getCustId())
                 .productId(savedTransaction.getProductId())
-                .lot(savedTransaction.getLot())
+                .lot(lot)
                 .goalId(savedTransaction.getGoalId())
-                .notes(transactionRequest.getNotes())
+                .notes(notes)
                 .build();
 
         auditTrailsService.logsAuditTrails(
@@ -217,34 +232,36 @@ public class TransactionServiceImplementation implements TransactionService {
         return response;
     }
 
+    @Transactional
     @Override
     public List<TransactionResponse> sellByProductName(String productName, int lotToSell, Long goalId, String token) throws JsonProcessingException {
+        if (lotToSell < 1) {
+            throw new LotException("Jumlah lot harus lebih dari 0");
+        }
+
         Long custId = usersClient.getIdCustFromToken(token);
 
         ProductRequest productRequest = new ProductRequest();
         productRequest.setProductName(productName);
         ProductRequest productInfo = productClient.getProductByProductByName(productRequest);
+
         if (productInfo == null) {
             throw new ProductNotFoundException("Produk tidak ditemukan: " + productName);
         }
 
-        List<Transaction> transactions = transactionRepository.findByCustIdAndProductIdAndGoalIdAndStatusOrderByCreatedDateAsc(
-                custId, productInfo.getProductId(), goalId,"SUCCESS");
+        List<Transaction> transactions = transactionRepository
+                .findByCustIdAndProductIdAndGoalIdAndStatusOrderByCreatedDateAsc(
+                        custId, productInfo.getProductId(), goalId, "SUCCESS");
 
         if (transactions.isEmpty()) {
-            throw new TrxNumberNotFoundException("Tidak ada transaksi aktif untuk produk: " + productName);
+            throw new TrxNumberNotFoundException("Tidak ada transaksi aktif untuk produk: " + productName + ", goalId: " + goalId);
         }
 
-        List<Transaction> filteredTransactions = transactions.stream()
-                .sorted(Comparator.comparing(Transaction::getCreatedDate))
-                .filter(trx -> trx.getLot() > 0)
-                .collect(Collectors.toList());
-
-        List<TransactionResponse> responses = new ArrayList<>();
         int remainingLot = lotToSell;
+        List<TransactionResponse> responses = new ArrayList<>();
 
-        for (Transaction trx : filteredTransactions) {
-            if (remainingLot <= 0) break;
+        for (Transaction trx : transactions) {
+            if (remainingLot <= 0 || trx.getLot() <= 0) continue;
 
             int availableLot = trx.getLot();
             int lotToProcess = Math.min(availableLot, remainingLot);
@@ -255,32 +272,20 @@ public class TransactionServiceImplementation implements TransactionService {
                 throw new ProductNotFoundException("Produk tidak ditemukan berdasarkan ID: " + trx.getProductId());
             }
 
-            // === Kalkulasi bunga harian ===
-            double productPrice = currentProduct.getProductPrice();
-            double investmentAmount = productPrice * lotToProcess;
-            int nDays = (int) DateHelper.calculateDayDiff(trx.getCreatedDate(), LocalDate.now());
+            double sellAmount = calculateSellAmount(currentProduct, trx.getCreatedDate(), lotToProcess);
 
-            double monthlyRate = currentProduct.getProductRate(); // rate bulanan
-            double dailyRate = Math.pow(1 + monthlyRate, 1.0 / 30) - 1;
-            double multiplier = Math.pow(1 + dailyRate, nDays);
-            double estimatedReturn = investmentAmount * multiplier;
-            double sellPricePerLot = estimatedReturn / lotToProcess; // Untuk response info
-            double totalSellAmount = estimatedReturn;
-
-            // Simpan riwayat penjualan
             TransactionHistory sellHistory = new TransactionHistory();
             sellHistory.setTransaction(trx);
             sellHistory.setStatus("SOLD");
             sellHistory.setCustId(custId);
             sellHistory.setProductId(trx.getProductId());
-            sellHistory.setAmount(totalSellAmount);
+            sellHistory.setAmount(sellAmount);
             sellHistory.setCreatedDate(new Date());
             sellHistory.setNotes("Sell via productName");
             sellHistory.setLot(lotToProcess);
             sellHistory.setGoalId(trx.getGoalId());
             transactionHistoryRepository.save(sellHistory);
 
-            // Update transaksi
             trx.setLot(availableLot - lotToProcess);
             trx.setUpdateDate(new Date());
             if (trx.getLot() == 0) {
@@ -288,14 +293,13 @@ public class TransactionServiceImplementation implements TransactionService {
             }
             transactionRepository.save(trx);
 
-            // Buat response
             TransactionResponse response = TransactionResponse.builder()
                     .status("SUCCESS")
-                    .amount(totalSellAmount)
+                    .amount(sellAmount)
                     .custId(custId)
                     .productId(trx.getProductId())
                     .productName(currentProduct.getProductName())
-                    .productPrice(sellPricePerLot)
+                    .productPrice(sellAmount / lotToProcess)
                     .lot(lotToProcess)
                     .goalId(trx.getGoalId())
                     .notes("Sell via productName")
@@ -304,17 +308,27 @@ public class TransactionServiceImplementation implements TransactionService {
         }
 
         if (remainingLot > 0) {
-            throw new LotException("Jumlah lot tidak mencukupi untuk produk " + productName);
+            throw new LotException("Jumlah lot tidak mencukupi. Sisa lot: " + remainingLot);
         }
 
         auditTrailsService.logsAuditTrails(
                 GeneralConstant.LOG_ACVITIY_SELL,
-                mapper.writeValueAsString(productName + " - " + lotToSell),
+                mapper.writeValueAsString("custId=" + custId + ", product=" + productName + ", lot=" + lotToSell),
                 mapper.writeValueAsString(responses),
                 "Sell transaction by product name"
         );
 
         return responses;
+    }
+
+    private double calculateSellAmount(ProductResponse product, Date buyDate, int lot) {
+        double price = product.getProductPrice();
+        double investment = price * lot;
+        int nDays = (int) DateHelper.calculateDayDiff(buyDate, LocalDate.now());
+        double monthlyRate = product.getProductRate();
+        double dailyRate = Math.pow(1 + monthlyRate, 1.0 / 30) - 1;
+        double multiplier = Math.pow(1 + dailyRate, nDays);
+        return investment * multiplier;
     }
 
     @Override

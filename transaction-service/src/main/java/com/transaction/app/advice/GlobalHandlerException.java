@@ -29,28 +29,38 @@ public class GlobalHandlerException {
 
     @ExceptionHandler(GoalNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleGoalNotFoundException(GoalNotFoundException ex) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Goal Not Found", ex.getMessage());
+        return buildErrorResponse(HttpStatus.NOT_FOUND, "Goal Not Found", ex.getMessage());
     }
 
     @ExceptionHandler(ProductNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleProductNotFoundException(ProductNotFoundException ex) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Product Not Found", ex.getMessage());
+        return buildErrorResponse(HttpStatus.NOT_FOUND, "Product Not Found", ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidProductPriceException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidProductPriceException(InvalidProductPriceException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Harga produk tidak valid", ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidTransactionAmountException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidTransactionAmountException(InvalidTransactionAmountException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Dana tidak cukup untuk membeli minimal 1 unit produk.", ex.getMessage());
     }
 
     @ExceptionHandler(TrxNumberNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleTrxNumberNotFoundException(TrxNumberNotFoundException ex) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Trx Number Not Found", ex.getMessage());
+        return buildErrorResponse(HttpStatus.NOT_FOUND, "Trx Number Not Found", ex.getMessage());
     }
 
     @ExceptionHandler(PhoneNotFoundException.class)
     public ResponseEntity<ErrorResponse> handlePhoneNotFoundException(PhoneNotFoundException ex) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Phone Number Not Found", ex.getMessage());
+        return buildErrorResponse(HttpStatus.NOT_FOUND, "Phone Number Not Found", ex.getMessage());
     }
 
 
     @ExceptionHandler(LotException.class)
     public ResponseEntity<ErrorResponse> handleLotException(LotException ex) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Lot Not Found", ex.getMessage());
+        return buildErrorResponse(HttpStatus.NOT_FOUND, "Lot Not Found", ex.getMessage());
     }
 
     @ExceptionHandler(JsonProcessingException.class)

@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long>{
-    @Query("SELECT p FROM Product p WHERE p.productName = :productName AND p.isDeleted = false")
+    @Query("SELECT p FROM Product p WHERE p.productName = :productName")
     Optional<Product> findProductByProductName(@Param("productName") String productName);
 
     @Query("SELECT p FROM Product p WHERE p.productId = :productId")
