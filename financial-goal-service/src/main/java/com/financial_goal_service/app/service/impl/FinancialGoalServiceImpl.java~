@@ -214,7 +214,7 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
         }
 
         FinancialGoal goal = goalOpt.get();
-        if (goal.getCurrentAmount() != null && goal.getCurrentAmount().compareTo(BigDecimal.ZERO) > 0) {
+        if (goal.getCurrentAmount() != null && BigDecimal.valueOf(goal.getCurrentAmount()).compareTo(BigDecimal.ZERO) > 0) {
             throw new IllegalStateException("Goal cannot be archived because current amount is greater than 0.");
         }
 
