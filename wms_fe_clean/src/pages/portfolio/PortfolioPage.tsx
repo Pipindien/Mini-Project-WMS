@@ -87,26 +87,29 @@ const HomePortfolio: React.FC = () => {
     navigate(`/portfolio/recommendation/${goalId}`);
   };
 
-  const handleDelete = async (goalId: string) => {
+  const handleDelete = async (goalId: string): Promise<boolean> => {
     const token = localStorage.getItem("token");
     if (!token) {
       alert("Token not found");
-      return;
+      return false;
     }
 
     try {
       await archiveGoal(goalId, token);
 
-      // ✅ Optimistic update
       setGoals((prevGoals) =>
         prevGoals.filter((goal) => goal.goalId !== Number(goalId))
       );
-    } catch (err) {
+
+      return true; // ✅ success
+    } catch (err: any) {
       console.error("Error archiving goal:", err);
+
+      // ❌ failed: tampilkan popup atau alert
       alert("Failed deleting the goal.");
 
-      // Optional: you can re-fetch to stay in sync
       fetchGoals();
+      return false;
     }
   };
 
@@ -297,9 +300,12 @@ const HomePortfolio: React.FC = () => {
                   Cancel
                 </motion.button>
                 <motion.button
-                  onClick={() => {
-                    handleDelete(selectedGoalId!);
-                    handleCloseModal();
+                  onClick={async () => {
+                    const success = await handleDelete(selectedGoalId!);
+
+                    if (success) {
+                      handleCloseModal(); // ✅ tutup modal hanya jika sukses
+                    }
                   }}
                   className="px-4 py-2 sm:px-6 sm:py-3 text-xxs sm:text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-md transition duration-200 transform hover:scale-105"
                   variants={buttonVariants}
