@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/db_transaction
+    url: jdbc:postgresql://localhost:5432/db_transaction_wms
     username: postgres
     password: admin
 
