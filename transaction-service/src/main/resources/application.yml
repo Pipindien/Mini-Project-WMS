@@ -6,18 +6,18 @@ spring:
     url: jdbc:postgresql://localhost:5432/db_transaction_wms
     username: postgres
     password: gearsley
-  jpa:
+
     hibernate:
       ddl-auto: update
     show-sql: true
 
 audit-trails:
-  url: http://localhost:8080/audit-trails/save
+  url: http://localhost:8181/audit-trails/save
 
 auth-validate-token:
-  url: http://localhost:8080/auth/
+  url: http://localhost:8181/auth/
 
-product :
+product:
   url: http://localhost:8082/product/{productName}
   urlById: http://localhost:8082/product/get/{productId}
 
