@@ -155,7 +155,7 @@ const ProductDetail: React.FC = () => {
                 onClick={handleBuy}
                 className="w-full bg-green-600 text-white py-2 px-6 rounded-lg font-semibold shadow hover:bg-green-700 transition-transform duration-300 hover:scale-105"
               >
-                Beli Sekarang
+                Purchase
               </button>
             </div>
           </div>

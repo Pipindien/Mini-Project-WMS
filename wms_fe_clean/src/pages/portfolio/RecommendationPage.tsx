@@ -116,7 +116,7 @@ const PortfolioRecommendation: React.FC = () => {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <h2 className="text-3xl font-bold text-center mb-4 text-indigo-700">
-        Alokasi Rekomendasi Portofolio
+        Portfolio Recommendation Allocation
       </h2>
 
       {/* Goal Info */}
@@ -188,7 +188,7 @@ const PortfolioRecommendation: React.FC = () => {
       {selectedCategory && (
         <>
           <h3 className="text-2xl font-semibold text-gray-800 mb-4 text-center">
-            Top 3 Produk di Kategori{" "}
+            Top 3 Products in Category:{" "}
             <span className="text-indigo-600">{selectedCategory}</span>
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
@@ -202,13 +202,13 @@ const PortfolioRecommendation: React.FC = () => {
                   {product.productName}
                 </p>
                 <p className="text-sm text-gray-500">
-                  Harga: Rp{product.productPrice.toLocaleString()}
+                  Price: Rp{product.productPrice.toLocaleString()}
                 </p>
                 <p className="text-sm text-gray-500">
-                  Estimasi Return: {(product.productRate * 100).toFixed(2)}%
+                  Return Estimation: {(product.productRate * 100).toFixed(2)}%
                 </p>
                 <p className="text-sm text-indigo-600 mt-3 underline font-medium">
-                  Lihat Detail
+                  View Detail
                 </p>
               </div>
             ))}

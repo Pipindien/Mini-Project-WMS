@@ -29,7 +29,7 @@ const BuyTransaction: React.FC = () => {
 
     const token = localStorage.getItem("token");
     if (!token) {
-      setSubmitError("Token tidak ditemukan. Silakan login kembali.");
+      setSubmitError("TToken not found. Please login again");
       return;
     }
 
@@ -37,7 +37,7 @@ const BuyTransaction: React.FC = () => {
 
     if (units < 1) {
       setSubmitError(
-        "Jumlah dana tidak cukup untuk membeli minimal 1 unit produk."
+        "The amount of funds is not sufficient to purchase at least 1 unit of product."
       );
       return;
     }
@@ -48,7 +48,7 @@ const BuyTransaction: React.FC = () => {
       amount: finalAmount,
       productName: product.productName,
       goalName,
-      notes: `${notes} (dibulatkan untuk ${units} unit)`,
+      notes: `${notes} (rounded up to ${units} unit)`,
     };
 
     try {
@@ -56,7 +56,7 @@ const BuyTransaction: React.FC = () => {
       const trxNumber = response.trxNumber;
       navigate(`/payment/${trxNumber}`);
     } catch (err) {
-      setSubmitError("Gagal melakukan transaksi.");
+      setSubmitError("Failed to make transaction");
     }
   };
 
@@ -64,7 +64,7 @@ const BuyTransaction: React.FC = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-200 via-blue-300 to-indigo-200 flex items-center justify-center px-4 py-10 animate__animated animate__fadeIn">
         <p className="text-center text-gray-700 animate__animated animate__pulse animate__infinite">
-          Memuat detail produk...
+          Loading product details...
         </p>
       </div>
     );
@@ -89,7 +89,7 @@ const BuyTransaction: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-sky-200 via-blue-300 to-indigo-200 flex items-center justify-center px-4 py-10 animate__animated animate__fadeIn">
       <div className="w-full max-w-md bg-white/80 backdrop-blur-md p-8 rounded-xl shadow-lg border border-white/60 transition-all duration-300 animate__animated animate__slideInDown">
         <h2 className="text-3xl font-extrabold text-gray-800 text-center mb-6 tracking-tight drop-shadow-sm animate__animated animate__fadeIn">
-          🛒 Beli Produk
+          🛒 Purchase Product
         </h2>
         <p className="text-lg text-center text-gray-700 mb-4 animate__animated animate__fadeIn animate__delay-1s">
           {product.productName}
@@ -101,7 +101,7 @@ const BuyTransaction: React.FC = () => {
         >
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2 animate__animated animate__fadeIn">
-              💰 Harga per Unit
+              💰 Price per Unit
             </label>
             <p className="text-lg text-blue-700 font-medium animate__animated animate__slideInLeft">
               Rp {product.productPrice.toLocaleString("id-ID")}
@@ -133,7 +133,7 @@ const BuyTransaction: React.FC = () => {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2 animate__animated animate__fadeIn">
-              🎯 Tujuan Keuangan
+              🎯 Financial Goals
             </label>
             {goalsLoading ? (
               <p className="text-sm text-gray-500 animate__animated animate__pulse animate__infinite">
@@ -161,7 +161,7 @@ const BuyTransaction: React.FC = () => {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2 animate__animated animate__fadeIn">
-              📝 Catatan Transaksi
+              📝 Transaction Notes
             </label>
             <textarea
               className="w-full border border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white/90 animate__animated animate__slideInRight"
@@ -175,7 +175,7 @@ const BuyTransaction: React.FC = () => {
             type="submit"
             className="w-full bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-500 hover:to-blue-600 text-white font-semibold py-3 px-6 rounded-md transition duration-200 shadow-md hover:shadow-lg animate__animated animate__fadeIn animate__delay-2s"
           >
-            💸 Beli Sekarang
+            💸 Purchase Now
           </button>
 
           {submitError && (

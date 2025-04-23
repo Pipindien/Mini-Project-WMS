@@ -125,7 +125,7 @@ const PaymentPage: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto mt-16 px-8 py-10 bg-white shadow-2xl rounded-3xl transition-all animate-fade-in">
       <h2 className="text-4xl font-extrabold text-center text-gray-800 mb-8">
-        💸 Status Pembayaran
+        💸 Payment Status
       </h2>
 
       {loading ? (
@@ -154,7 +154,7 @@ const PaymentPage: React.FC = () => {
 
           {responseData && (
             <div className="bg-gray-50 rounded-xl p-6 space-y-4 shadow-inner border border-gray-100 animate-fade-in-up">
-              <DetailRow label="📦 Produk" value={responseData.productName} />
+              <DetailRow label="📦 Product" value={responseData.productName} />
               <DetailRow
                 label="💰 Investment Nominal"
                 value={`Rp ${
@@ -181,14 +181,14 @@ const PaymentPage: React.FC = () => {
           {status === "SUCCESS" ? (
             <div className="mt-8 text-center animate-fade-in">
               <p className="text-green-600 font-semibold mb-4">
-                ✅ Pembayaran berhasil! Anda akan diarahkan ke dashboard dalam
-                beberapa detik...
+                ✅ Payment successful! You will be redirected to the dashboard
+                in a few seconds...
               </p>
               <button
                 onClick={() => navigate("/dashboard")}
                 className="bg-gray-200 text-gray-800 font-medium py-2 px-5 rounded-xl hover:bg-gray-300 transition-transform transform hover:scale-105"
               >
-                Kembali ke Dashboard Sekarang
+                Return to Dashboard Now
               </button>
             </div>
           ) : (
