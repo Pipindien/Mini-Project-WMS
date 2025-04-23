@@ -1,4 +1,4 @@
-package com.product.app.service;
+package com.product.app.service.implementation;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.product.app.dto.ProductRequest;
@@ -7,6 +7,7 @@ import com.product.app.entity.Category;
 import com.product.app.entity.Product;
 import com.product.app.repository.ProductRepository;
 import com.product.app.repository.CategoryRepository;
+import com.product.app.service.AuditTrailsService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -19,10 +20,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 @ExtendWith(MockitoExtension.class)
-class ProductServiceTest {
+class ProductServiceImplementationTest {
 
     @InjectMocks
-    private ProductService productService;
+    private ProductServiceImplementation productService;
 
     @Mock
     private ProductRepository productRepository;

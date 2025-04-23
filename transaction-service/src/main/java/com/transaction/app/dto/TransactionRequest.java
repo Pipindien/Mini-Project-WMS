@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 public class TransactionRequest {
 
     private String status;
+    @NotNull
     private Double amount;
     private String productName;
     private String goalName;

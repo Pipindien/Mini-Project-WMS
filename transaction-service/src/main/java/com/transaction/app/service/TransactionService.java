@@ -25,7 +25,4 @@ public interface TransactionService {
 
     TransactionResponse getTransactionNumber(String trxNumber,  String token) throws JsonProcessingException;
 
-    List<TransactionResponse> getTransactionsByCustId(String token) throws JsonProcessingException;
-
-
 }
