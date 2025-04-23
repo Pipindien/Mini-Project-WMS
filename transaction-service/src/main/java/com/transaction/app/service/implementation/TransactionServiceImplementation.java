@@ -394,44 +394,4 @@ public class TransactionServiceImplementation implements TransactionService {
         return response;
     }
 
-    @Override
-    public List<TransactionResponse> getTransactionsByCustId(String token) throws JsonProcessingException {
-        Long custId = usersClient.getIdCustFromToken(token);
-        List<Transaction> transactions = transactionRepository.findByCustId(custId);
-
-        List<TransactionResponse> responses = new ArrayList<>();
-
-        for (Transaction trx : transactions) {
-            ProductResponse product = null;
-                product = productClient.getProductById(trx.getProductId());
-
-            FinancialGoalResponse goal = null;
-                goal = fingolClient.getFinancialGoalById(trx.getGoalId(),token);
-
-
-            TransactionResponse response = TransactionResponse.builder()
-                    .status(trx.getStatus())
-                    .amount(trx.getAmount())
-                    .custId(trx.getCustId())
-                    .productId(trx.getProductId())
-                    .lot(trx.getLot())
-                    .goalId(trx.getGoalId())
-                    .productName(product != null ? product.getProductName() : null)
-                    .productPrice(product != null ? product.getProductPrice() : null)
-                    .goalName(goal != null ? goal.getGoalName() : null)
-                    .build();
-
-            responses.add(response);
-        }
-
-        auditTrailsService.logsAuditTrails(
-                GeneralConstant.LOG_ACVITIY_GET_TRX_NUMBER,
-                mapper.writeValueAsString(custId),
-                mapper.writeValueAsString(responses),
-                "Insert Get My Transaction"
-        );
-
-        return responses;
-    }
-
 }

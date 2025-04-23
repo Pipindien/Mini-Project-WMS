@@ -71,11 +71,6 @@ public class TransactionController {
         return ResponseEntity.ok(transactionService.getTransactionStatusAndCust(status, token));
     }
 
-    @GetMapping("/my")
-    public ResponseEntity<List<TransactionResponse>> getMyTransactions(@RequestHeader String token) throws JsonProcessingException {
-        List<TransactionResponse> response = transactionService.getTransactionsByCustId(token);
-        return ResponseEntity.ok(response);
-    }
 
     @PostMapping("/sell")
     public ResponseEntity<List<TransactionResponse>> sellByProductName(

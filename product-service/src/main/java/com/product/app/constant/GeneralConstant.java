@@ -2,7 +2,6 @@ package com.product.app.constant;
 
 public class GeneralConstant {
     public static final String LOG_ACVITIY_SAVE = "Save Product";
-    public static final String LOG_ACVITIY_SAVE_HISTORY_VALUE = "Save Value History";
     public static final String LOG_ACVITIY_UPDATE = "Update Product";
     public static final String LOG_ACVITIY_DELETE= "Delete Product";
 

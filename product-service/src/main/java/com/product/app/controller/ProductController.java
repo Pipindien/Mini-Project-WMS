@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.product.app.advice.exception.ProductNotFoundException;
 import com.product.app.dto.ProductRequest;
 import com.product.app.dto.ProductResponse;
-import com.product.app.entity.Product;
 import com.product.app.service.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +21,7 @@ public class ProductController {
     ProductService productService;
 
     @PostMapping("/save")
-    public ResponseEntity<ProductResponse> saveProduct(@RequestBody ProductRequest productRequest) throws JsonProcessingException {
+    public ResponseEntity<ProductResponse> saveProduct(@Valid @RequestBody ProductRequest productRequest) throws JsonProcessingException {
         return ResponseEntity.status(HttpStatus.CREATED).body(productService.saveProduct(productRequest));
     }
 
@@ -60,7 +60,7 @@ public class ProductController {
     }
 
     @PutMapping("/update/{productId}")
-    public ResponseEntity<ProductResponse> updateProduct(@PathVariable Long productId,
+    public ResponseEntity<ProductResponse> updateProduct(@Valid @PathVariable Long productId,
                                                          @RequestBody ProductRequest productRequest) throws JsonProcessingException {
         ProductResponse updatedProduct = productService.updateProduct(productId, productRequest);
         return ResponseEntity.ok(updatedProduct);

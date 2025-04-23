@@ -2,11 +2,8 @@ package com.product.app.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.product.app.advice.exception.CategoryNotFoundException;
-import com.product.app.advice.exception.ProductNotFoundException;
 import com.product.app.dto.CategoryRequest;
 import com.product.app.dto.CategoryResponse;
-import com.product.app.dto.ProductResponse;
-import com.product.app.entity.Category;
 import com.product.app.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController

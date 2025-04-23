@@ -1,4 +1,4 @@
-package com.product.app.service;
+package com.product.app.service.implementation;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,6 +9,7 @@ import com.product.app.dto.CategoryRequest;
 import com.product.app.dto.CategoryResponse;
 import com.product.app.entity.Category;
 import com.product.app.repository.CategoryRepository;
+import com.product.app.service.AuditTrailsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,7 +19,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
-class CategoryServiceTest {
+class CategoryServiceImplementationTest {
 
     @Mock
     private CategoryRepository categoryRepository;
@@ -38,7 +38,7 @@ class CategoryServiceTest {
     private ObjectMapper objectMapper;
 
     @InjectMocks
-    private CategoryService categoryService;
+    private CategoryServiceImplementation categoryService;
 
     private CategoryRequest categoryRequest;
     private Category category;

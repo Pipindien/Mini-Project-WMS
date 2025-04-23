@@ -16,9 +16,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     Transaction findTransactionByTrxNumber(String trxNumber);
 
-    List<Transaction> findByCustId(Long custId);
-
-
     List<Transaction> findByCustIdAndProductIdAndGoalIdAndStatusOrderByCreatedDateAsc(Long custId, Long productId, Long goalId, String status);
 
     List<Transaction> findByCustIdAndGoalIdAndStatus(Long custId, Long goalId, String status);

@@ -17,6 +17,9 @@ public class Category {
     @Column(name = "category_id")
     private Long categoryId;
     private String categoryType;
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
     private Date createdDate;
     private Date updateDate;
+
 }

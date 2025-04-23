@@ -66,12 +66,6 @@ public class TransactionRepositoryTest {
     }
 
     @Test
-    public void testFindByCustId() {
-        List<Transaction> transactions = transactionRepository.findByCustId(1L);
-        assertEquals(2, transactions.size());
-    }
-
-    @Test
     public void testFindByCustIdAndProductIdAndGoalIdAndStatusOrderByCreatedDateAsc() {
         List<Transaction> transactions = transactionRepository
                 .findByCustIdAndProductIdAndGoalIdAndStatusOrderByCreatedDateAsc(1L, 101L, 201L, "PENDING");
