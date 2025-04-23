@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/auth")
@@ -29,8 +31,29 @@ public class AuthController {
     }
 
     @GetMapping("/")
-    public ResponseEntity<LoginResponse> getUser(@RequestHeader String token) throws JsonProcessingException {
+    public ResponseEntity<LoginResponse> getProfileFromToken(@RequestHeader String token) throws JsonProcessingException{
         LoginResponse loginResponse = loginService.checkToken(token);
+
         return ResponseEntity.ok(loginResponse);
     }
+
+
+    @PutMapping("/balance/{custId}")
+    public ResponseEntity<String> updateBalance(
+            @PathVariable Long custId,
+            @RequestBody Map<String, Object> requestBody,
+            @RequestHeader String token
+    ) {
+        System.out.println("Received Token: " + token); // Cek token yang diterima
+
+        double amount = ((Number) requestBody.getOrDefault("amount", 0.0)).doubleValue();
+        boolean isAddition = (boolean) requestBody.getOrDefault("isAddition", true); // Default: tambah saldo
+
+        loginService.updateUserBalance(custId, amount, isAddition);
+
+        String message = isAddition ? "Saldo berhasil ditambahkan" : "Saldo berhasil dikurangi";
+        return ResponseEntity.ok(message);
+    }
+
+
 }

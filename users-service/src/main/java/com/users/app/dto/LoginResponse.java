@@ -10,7 +10,11 @@ import java.util.UUID;
 public class LoginResponse {
     private String token;
     private Long custId;
+    private String fullname;
+    private String phone;
+    private String email;
     private Integer age;
     private Double salary;
+    private Double balance;
     private String role;
 }

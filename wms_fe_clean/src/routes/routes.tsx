@@ -17,6 +17,7 @@ import PortfolioForm from "../pages/portfolio/PortfolioForm";
 import Information from "../pages/home/information";
 import EditGoalPage from "../pages/portfolio/EditGoalPage";
 import RecommendationPage from "../pages/portfolio/RecommendationPage";
+import Profile from "../pages/home/profile";
 
 export const router = createBrowserRouter([
   {
@@ -43,6 +44,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={["USER"]}>
             <Home />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/profile", // ✅ Route baru untuk halaman profile
+        element: (
+          <ProtectedRoute allowedRoles={["USER", "ADMIN"]}>
+            <Profile />
           </ProtectedRoute>
         ),
       },

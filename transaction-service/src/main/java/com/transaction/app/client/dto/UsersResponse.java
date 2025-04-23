@@ -9,5 +9,6 @@ public class UsersResponse {
     private String email;
     private String password;
     private String phone;
+    private Double balance;
     private String token;
 }

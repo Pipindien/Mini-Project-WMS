@@ -24,7 +24,7 @@ import java.util.Date;
 public class LoginServiceImplementation implements LoginService {
 
     @Autowired
-    private  UsersRepository usersRepository;
+    private UsersRepository usersRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper;
@@ -33,7 +33,6 @@ public class LoginServiceImplementation implements LoginService {
 
     @Autowired
     private JWTService jwtService;
-
 
     @Override
     public LoginResponse registerasi(LoginRequest loginRequest) throws JsonProcessingException {
@@ -56,6 +55,7 @@ public class LoginServiceImplementation implements LoginService {
                     .password(passwordEncoder.encode(loginRequest.getPassword()))
                     .createdDate(new Date())
                     .role("USER")
+                    .balance(0.0) // Initial balance set to 0
                     .build();
 
             Users savedUser = usersRepository.save(users);
@@ -131,41 +131,53 @@ public class LoginServiceImplementation implements LoginService {
     @Override
     public LoginResponse checkToken(String token) throws JsonProcessingException {
         try {
-            String username = jwtService.extractUsername(token);
+            String username = jwtService.extractUsername(token); // Mengekstrak username dari token
 
             Users user = usersRepository.findByUsername(username)
                     .orElseThrow(() -> new UsernameNotFoundException("Username Not Found"));
 
-            boolean isValid = jwtService.isTokenValid(token, user);
+            boolean isValid = jwtService.isTokenValid(token, user); // Verifikasi token
             if (!isValid) {
                 throw new RuntimeException("Token is invalid or expired.");
             }
 
-            auditTrailsService.insertAuditTrails(AuditTrailsRequest.builder()
-                    .action(GeneralConstant.LOG_ACVITIY_CHECK_TOKEN)
-                    .description("Token Validated")
-                    .date(new Date())
-                    .request(objectMapper.writeValueAsString(token))
-                    .response(objectMapper.writeValueAsString(user.getCustId()))
-                    .build());
-
+            // Setelah token tervalidasi, kembalikan data pengguna dalam bentuk LoginResponse
             return LoginResponse.builder()
                     .token(token)
+                    .fullname(user.getFullName())
+                    .email(user.getEmail())
+                    .phone(user.getPhone())
                     .custId(user.getCustId())
                     .age(user.getAge())
                     .salary(user.getSalary())
+                    .balance(user.getBalance())
+                    .role(user.getRole())
                     .build();
 
         } catch (Exception ex) {
-            auditTrailsService.insertAuditTrails(AuditTrailsRequest.builder()
-                    .action(GeneralConstant.LOG_ACVITIY_CHECK_TOKEN)
-                    .description("Token Invalid")
-                    .date(new Date())
-                    .request(objectMapper.writeValueAsString(token))
-                    .response(ex.getMessage())
-                    .build());
-
             throw new TokenExpiredException("Token Invalid or Expired.");
         }
     }
+
+    public void updateUserBalance(Long custId, Double amount, boolean isAddition) {
+        Users user = usersRepository.findById(custId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + custId));
+
+        if (user.getBalance() == null) {
+            user.setBalance(0.0);
+        }
+
+        if (!isAddition) {
+            if (user.getBalance() < amount) {
+                throw new RuntimeException("Insufficient balance for this transaction.");
+            }
+            user.setBalance(user.getBalance() - amount);
+        } else {
+            user.setBalance(user.getBalance() + amount);
+        }
+
+        usersRepository.save(user);
+    }
+
+
 }

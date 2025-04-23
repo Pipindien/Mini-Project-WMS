@@ -11,4 +11,6 @@ public interface LoginService {
     LoginResponse registerasi(LoginRequest loginRequest) throws JsonProcessingException;
 
     LoginResponse checkToken(String token) throws JsonProcessingException;
+
+    void updateUserBalance(Long custId, Double amount, boolean isAddition);
 }

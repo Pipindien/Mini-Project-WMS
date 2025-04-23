@@ -15,6 +15,11 @@ export interface LoginResponse {
   custId: number;
   age: number;
   salary: number;
+  balance: number;
+  role: string;
+  fullname: string;
+  email: string;
+  phone: string;
 }
 
 export interface RegisterPayload {
@@ -23,6 +28,7 @@ export interface RegisterPayload {
   phone: string;
   age: number;
   salary: number;
+  balance: number;
   username: string;
   password: string;
 }

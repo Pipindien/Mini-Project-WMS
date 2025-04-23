@@ -134,6 +134,8 @@ public class TransactionServiceImplementation implements TransactionService {
 
         transactionHistoryRepository.save(transactionHistory);
 
+        usersClient.updateUserBalance(token, finalAmount, false);
+
         TransactionResponse response = TransactionResponse.builder()
                 .trxNumber(savedTransaction.getTrxNumber())
                 .status(savedTransaction.getStatus())
@@ -292,6 +294,9 @@ public class TransactionServiceImplementation implements TransactionService {
                 trx.setStatus("SOLD");
             }
             transactionRepository.save(trx);
+
+            usersClient.updateUserBalance(token, sellAmount, true); // Tambah saldo
+
 
             TransactionResponse response = TransactionResponse.builder()
                     .status("SUCCESS")

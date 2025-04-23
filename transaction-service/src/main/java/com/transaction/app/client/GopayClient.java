@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.Random;
+
 @Service
 public class GopayClient {
     @Autowired
@@ -46,13 +48,16 @@ public class GopayClient {
             ResponseEntity<GopayResponse> responseEntity = restTemplate.getForEntity(url, GopayResponse.class);
             GopayResponse responseBody = responseEntity.getBody();
 
-            System.out.println(" Response dari API Gopay: " + responseBody);
-
             if (responseBody == null || responseBody.getPhone() == null) {
                 System.out.println("Phone tidak ditemukan untuk nomor: " + gopayResponse.getPhone());
                 return null;
             }
 
+            String[] possibleStatuses = {"PENDING", "FAILED", "SUCCESS"};
+            String randomizedStatus = possibleStatuses[new Random().nextInt(possibleStatuses.length)];
+            responseBody.setStatus(randomizedStatus);
+
+            System.out.println("Status diganti secara acak menjadi: " + randomizedStatus);
             return responseBody;
 
         } catch (Exception e) {
@@ -60,5 +65,6 @@ public class GopayClient {
             return null;
         }
     }
+
 
 }

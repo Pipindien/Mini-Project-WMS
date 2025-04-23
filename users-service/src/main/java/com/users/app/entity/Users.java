@@ -34,5 +34,6 @@ public class Users {
     private Integer age;
     private Double salary;
     private String role;
+    private Double balance;
     private Date createdDate;
 }
