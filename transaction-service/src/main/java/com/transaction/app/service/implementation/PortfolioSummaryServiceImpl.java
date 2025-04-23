@@ -20,6 +20,7 @@ import com.transaction.app.service.InsightService;
 import com.transaction.app.service.PortfolioSummaryService;
 import com.transaction.app.utility.DateHelper;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
     @Autowired
@@ -55,9 +57,17 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
     @Override
     @Transactional
     public PortfolioSummaryResponse upsertPortfolioSummary(Long goalId, String token) throws JsonProcessingException {
+        if (token == null || token.isBlank()) {
+            throw new IllegalArgumentException("Token must not be null or empty");
+        }
         Long custId = usersClient.getIdCustFromToken(token);
+        if (custId == null) {
+            throw new RuntimeException("Invalid token: custId could not be resolved");
+        }
         List<Transaction> transactions = transactionRepository.findByCustIdAndGoalIdAndStatus(custId, goalId, "SUCCESS");
-        if (transactions.isEmpty()) return null;
+        if (transactions.isEmpty()) {
+            throw new NoSuchElementException("No successful transactions found for this goal");
+        }
 
         PortfolioSummary summary = portfolioSummaryRepository.findByCustIdAndGoalId(custId, goalId)
                 .orElseGet(() -> portfolioSummaryRepository.save(PortfolioSummary.builder()
@@ -79,7 +89,15 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
             if (transaction.getLot() <= 0) continue;
 
             ProductResponse product = productClient.getProductById(transaction.getProductId());
-            if (product == null) continue;
+            if (product == null) {
+                log.warn("Product with ID {} not found, skipping transaction ID {}", transaction.getProductId(), transaction.getId());
+                continue;
+            }
+
+            if (product.getProductRate() < 0) {
+                log.warn("Negative product rate for product ID {}, skipping", product.getProductId());
+                continue;
+            }
 
             double productPrice = product.getProductPrice();
             double investmentAmount = productPrice * transaction.getLot();
@@ -112,6 +130,9 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
             totalEstimatedReturn += estimatedReturn;
         }
 
+        if (detailList.isEmpty()) {
+            log.warn("No portfolio details generated for custId: {}, goalId: {}", custId, goalId);
+        }
 
         summary.setTotalInvestment(totalInvestment);
         summary.setEstimatedReturn(totalEstimatedReturn);
@@ -119,12 +140,19 @@ public class PortfolioSummaryServiceImpl implements PortfolioSummaryService {
         summary.getProductDetails().addAll(detailList);
         summary = portfolioSummaryRepository.save(summary);
 
+        if (summary == null || summary.getPortoId() == null) {
+            throw new RuntimeException("Failed to save portfolio summary");
+        }
+
         auditTrailsService.logsAuditTrails(
                 GeneralConstant.LOG_ACVITIY_UPSERTPORTFOLIO,
                 mapper.writeValueAsString(custId),
                 mapper.writeValueAsString(custId),
                 "Update and Insert Portfolio Summary"
         );
+
+        log.info("Successfully upserted portfolio for custId: {}, goalId: {}, totalInvestment: {}, estimatedReturn: {}",
+                custId, goalId, totalInvestment, totalEstimatedReturn);
 
         return PortfolioSummaryResponse.builder()
                 .portoId(summary.getPortoId())
