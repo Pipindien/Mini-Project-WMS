@@ -33,7 +33,7 @@ const Header: React.FC = () => {
       <div className="container mx-auto flex justify-between items-center">
         <Link
           to="/information"
-          className="text-white text-2xl font-bold tracking-wide"
+          className="text-white text-2xl font-bold tracking-wide transition-colors duration-300 hover:text-yellow-400"
         >
           WealthScape
         </Link>
@@ -65,7 +65,7 @@ const Header: React.FC = () => {
           {role && (
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm transition-all duration-200"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-red-500 text-white text-sm transition-all duration-200"
             >
               <LogOut size={16} />
               Logout

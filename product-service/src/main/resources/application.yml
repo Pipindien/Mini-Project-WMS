@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/db_product
+    url: jdbc:postgresql://localhost:5432/db_product_wms
     username: postgres
-    password: admin
+    password: gearsley
   jpa:
     hibernate:
       ddl-auto: update
@@ -15,4 +15,4 @@ spring:
       pool:
         size=2:
 audit-trails:
-  url: http://localhost:8080/audit-trails/save
+  url: http://localhost:8181/audit-trails/save
