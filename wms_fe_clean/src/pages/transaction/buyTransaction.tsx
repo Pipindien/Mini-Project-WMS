@@ -44,7 +44,7 @@ const BuyTransaction: React.FC = () => {
       const response = await buyTransaction(request, token);
       navigate(`/payment/${response.trxNumber}`);
     } catch (err) {
-      setSubmitError("Failed to make transaction");
+      setSubmitError("Failed to make transaction cek your saldo");
     }
   };
 

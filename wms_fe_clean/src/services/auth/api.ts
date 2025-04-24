@@ -17,3 +17,25 @@ export const getProfile = async (): Promise<LoginResponse> => {
 
   return response.data;
 };
+
+export const updateBalance = async (
+  custId: number,
+  amount: number,
+  isAddition: boolean,
+  token: string
+) => {
+  const response = await fetch(`http://localhost:8080/auth/balance/${custId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      token,
+    },
+    body: JSON.stringify({ amount, isAddition }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to update balance");
+  }
+
+  return response.text(); // atau response.json()
+};
